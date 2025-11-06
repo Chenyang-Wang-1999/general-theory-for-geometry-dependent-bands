@@ -1,0 +1,16 @@
+Warning:GBZConditionChecker2D.get_full_solution: continuation check failed
+Distances: [9.425659447896887, 10.193388368783575]
+Warning:GBZConditionChecker2D.get_full_solution: continuation check failed
+Distances: [23.89741848737111, 10.193388368783822]
+Warning:GBZConditionChecker2D.get_full_solution: continuation check failed
+Distances: [10.179441314905095, 7.501653875679002]
+Warning:GBZConditionChecker2D.get_full_solution: continuation check failed
+Distances: [10.711198012142082, 10.156212629922221]
+Warning:GBZConditionChecker2D.get_full_solution: continuation check failed
+Distances: [10.165272350502946, 9.720821541551423]
+Warning:GBZConditionChecker2D.get_full_solution: continuation check failed
+Distances: [9.971121481110599, 9.69081670969251]
+Warning:GBZConditionChecker2D.get_full_solution: continuation check failed
+Distances: [7.071551543246138, 3.2701769474888116, 8.73412967055552]
+Warning:GBZConditionChecker2D.get_full_solution: continuation check failed
+Distances: [6.171181507668145, 3.021527278296263, 3.8890564017424527]
