@@ -109,7 +109,7 @@ def 画能谱():
     plt.savefig("data/斜矩形谱.pdf")
 
 
-def 画正矩形本征态分布():
+def draw_eigenstate_distribution_square():
     with open("data/square-geometry.pkl", "rb") as fp:
         nx, ny, all_coords, eigv, eigvec = pickle.load(fp)
 
@@ -130,10 +130,10 @@ def 画正矩形本征态分布():
     ax.set_aspect(1)
     ax.xaxis.set_visible(False)
     ax.yaxis.set_visible(False)
-    fig.savefig("Figures/正矩形态分布.pdf")
+    fig.savefig("Figures/eigenstate-square.pdf")
 
 
-def 画斜矩形本征态分布():
+def draw_eigenstate_distribution_slanted():
     with open("data/slanted-geometry.pkl", "rb") as fp:
         all_coords, eigv, eigvec = pickle.load(fp)
 
@@ -154,12 +154,14 @@ def 画斜矩形本征态分布():
     ax.set_aspect(1)
     ax.xaxis.set_visible(False)
     ax.yaxis.set_visible(False)
-    fig.savefig("Figures/斜矩形态分布.pdf")
+    fig.savefig("Figures/eigenstate-slanted.pdf")
 
 
 if __name__ == '__main__':
-    # calculate_square()
-    # 计算斜几何能谱()
-    画正矩形本征态分布()
-    # 画能谱()
-    画斜矩形本征态分布()
+    import os
+    if not os.path.exists("data"):
+        os.makedirs("data")
+    calculate_square()
+    计算斜几何能谱()
+    draw_eigenstate_distribution_square()
+    draw_eigenstate_distribution_slanted()

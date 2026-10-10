@@ -9,6 +9,13 @@ The LaTeX source of the main text and SI is archived in `paper/manu-and-supp`. T
    There are also C++ source files in some folders. Pybind11 is required to build them.
 2. Use numerical data files published on ScienceDB [cstr.cn/31253.11.sciencedb.015c0](https://cstr.cn/31253.11.sciencedb.015c0) and run plotting scripts.
 
+All the scripts should be executed at its directory.
+For example, to run "paper/schematic-GDSE/plot-schematic-GDSE.py":
+```bash
+cd paper/schematic-GDSE
+python plot-schematic-GDSE.py
+```
+
 For git version control, data are not included in this repo.
 The dataset [cstr.cn/31253.11.sciencedb.015c0](https://cstr.cn/31253.11.sciencedb.015c0) contains all data files (in "pickle" format) to generate the figures used by both the main text and the SI.
 The folder tree in the dataset is the same as the current repo.
@@ -31,11 +38,11 @@ Related files and scripts:
 ```mermaid
 flowchart TB
     A[paper/schematic-GDSE/plot-schematic-GDSE.py]
-    B1[paper/schematic-GDSE/Figures/正矩形态分布.pdf]
-    B2[paper/schematic-GDSE/Figures/斜矩形态分布.pdf]
+    B1[paper/schematic-GDSE/Figures/eigenstate-square.pdf]
+    B2[paper/schematic-GDSE/Figures/eigenstate-slanted.pdf]
     C[Full pdf]
-    A --画正矩形本征态分布--> B1
-    A --画斜矩形本征态分布--> B2
+    A --draw_eigenstate_distribution_square --> B1
+    A --draw_eigenstate_distribution_slanted --> B2
     B1 --assembled in--> C
     B2 --assembled in--> C
 ```
