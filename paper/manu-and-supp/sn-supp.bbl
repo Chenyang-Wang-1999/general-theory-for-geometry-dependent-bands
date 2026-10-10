@@ -1,0 +1,84 @@
+\begin{thebibliography}{10}
+\expandafter\ifx\csname url\endcsname\relax
+  \def\url#1{\burl{#1}}\fi
+\expandafter\ifx\csname urlprefix\endcsname\relax\def\urlprefix{URL }\fi
+\providecommand{\bibinfo}[2]{#2}
+\providecommand{\eprint}[2][]{\url{#2}}
+\providecommand{\doi}[1]{\url{https://doi.org/#1}}
+\bibcommenthead
+
+\bibitem{yaoEdgeStatesTopological2018}
+\bibinfo{author}{Yao, S.} \& \bibinfo{author}{Wang, Z.}
+\newblock \bibinfo{title}{Edge {{States}} and {{Topological Invariants}} of {{Non-Hermitian Systems}}}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. Lett.}} \textbf{\bibinfo{volume}{121}}, \bibinfo{pages}{086803} (\bibinfo{year}{2018}).
+
+\bibitem{yokomizoNonBlochBandTheory2019}
+\bibinfo{author}{Yokomizo, K.} \& \bibinfo{author}{Murakami, S.}
+\newblock \bibinfo{title}{Non-{{Bloch Band Theory}} of {{Non-Hermitian Systems}}}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. Lett.}} \textbf{\bibinfo{volume}{123}}, \bibinfo{pages}{066404} (\bibinfo{year}{2019}).
+
+\bibitem{yangNonHermitianBulkBoundaryCorrespondence2020}
+\bibinfo{author}{Yang, Z.}, \bibinfo{author}{Zhang, K.}, \bibinfo{author}{Fang, C.} \& \bibinfo{author}{Hu, J.}
+\newblock \bibinfo{title}{Non-{{Hermitian Bulk-Boundary Correspondence}} and {{Auxiliary Generalized Brillouin Zone Theory}}}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. Lett.}} \textbf{\bibinfo{volume}{125}}, \bibinfo{pages}{226402} (\bibinfo{year}{2020}).
+
+\bibitem{zhangCorrespondenceWindingNumbers2020}
+\bibinfo{author}{Zhang, K.}, \bibinfo{author}{Yang, Z.} \& \bibinfo{author}{Fang, C.}
+\newblock \bibinfo{title}{Correspondence between {{Winding Numbers}} and {{Skin Modes}} in {{Non-Hermitian Systems}}}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. Lett.}} \textbf{\bibinfo{volume}{125}}, \bibinfo{pages}{126402} (\bibinfo{year}{2020}).
+
+\bibitem{hatcherAlgebraicTopology2001}
+\bibinfo{author}{Hatcher, A.}
+\newblock \emph{\bibinfo{title}{Algebraic {{Topology}}}} \bibinfo{edition}{1st edition} edn (\bibinfo{publisher}{Cambridge University Press}, \bibinfo{address}{New York}, \bibinfo{year}{2001}).
+
+\bibitem{verscheldeAlgorithm795PHCpack1999}
+\bibinfo{author}{Verschelde, J.}
+\newblock \bibinfo{title}{Algorithm 795: {{PHCpack}}: A general-purpose solver for polynomial systems by homotopy continuation}.
+\newblock \emph{\bibinfo{journal}{ACM Trans. Math. Softw.}} \textbf{\bibinfo{volume}{25}}, \bibinfo{pages}{251--276} (\bibinfo{year}{1999}).
+
+\bibitem{liGainLossInducedHybridSkinTopological2022}
+\bibinfo{author}{Li, Y.}, \bibinfo{author}{Liang, C.}, \bibinfo{author}{Wang, C.}, \bibinfo{author}{Lu, C.} \& \bibinfo{author}{Liu, Y.-C.}
+\newblock \bibinfo{title}{Gain-{{Loss-Induced Hybrid Skin-Topological Effect}}}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. Lett.}} \textbf{\bibinfo{volume}{128}}, \bibinfo{pages}{223903} (\bibinfo{year}{2022}).
+
+\bibitem{jiangObservationNonHermitianBoundary2024}
+\bibinfo{author}{Jiang, T.} \emph{et~al.}
+\newblock \bibinfo{title}{Observation of non-{{Hermitian}} boundary induced hybrid skin-topological effect excited by synthetic complex frequencies}.
+\newblock \emph{\bibinfo{journal}{Nat. Commun.}} \textbf{\bibinfo{volume}{15}}, \bibinfo{pages}{10863} (\bibinfo{year}{2024}).
+
+\bibitem{sunPhotonicFloquetSkinTopological2024}
+\bibinfo{author}{Sun, Y.} \emph{et~al.}
+\newblock \bibinfo{title}{Photonic {{Floquet Skin-Topological Effect}}.}
+\newblock \emph{\bibinfo{journal}{Phys. Rev. Lett.}} \textbf{\bibinfo{volume}{132}}, \bibinfo{pages}{063804} (\bibinfo{year}{2024}).
+
+\bibitem{PhysRevLett.133.126601}
+\bibinfo{author}{Wu, J.} \emph{et~al.}
+\newblock \bibinfo{title}{Spin-dependent localization of helical edge states in a non-hermitian phononic crystal}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. Lett.}} \textbf{\bibinfo{volume}{133}}, \bibinfo{pages}{126601} (\bibinfo{year}{2024}).
+
+\bibitem{wangAmoebaFormulationNonBloch2024}
+\bibinfo{author}{Wang, H.-Y.}, \bibinfo{author}{Song, F.} \& \bibinfo{author}{Wang, Z.}
+\newblock \bibinfo{title}{Amoeba {{Formulation}} of {{Non-Bloch Band Theory}} in {{Arbitrary Dimensions}}}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. X}} \textbf{\bibinfo{volume}{14}}, \bibinfo{pages}{021011} (\bibinfo{year}{2024}).
+
+\bibitem{yokomizoNonBlochBandsTwodimensional2023}
+\bibinfo{author}{Yokomizo, K.} \& \bibinfo{author}{Murakami, S.}
+\newblock \bibinfo{title}{Non-{{Bloch}} bands in two-dimensional non-{{Hermitian}} systems}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. B}} \textbf{\bibinfo{volume}{107}}, \bibinfo{pages}{195112} (\bibinfo{year}{2023}).
+
+\bibitem{zhangAlgebraicNonHermitianSkin2025}
+\bibinfo{author}{Zhang, K.}, \bibinfo{author}{Shu, C.} \& \bibinfo{author}{Sun, K.}
+\newblock \bibinfo{title}{Algebraic {{Non-Hermitian Skin Effect}} and {{Generalized Fermi Surface Formula}} in {{Arbitrary Dimensions}}}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. X}} \textbf{\bibinfo{volume}{15}}, \bibinfo{pages}{031039} (\bibinfo{year}{2025}).
+
+\bibitem{zhangUniversalNonHermitianSkin2022}
+\bibinfo{author}{Zhang, K.}, \bibinfo{author}{Yang, Z.} \& \bibinfo{author}{Fang, C.}
+\newblock \bibinfo{title}{Universal non-{{Hermitian}} skin effect in two and higher dimensions}.
+\newblock \emph{\bibinfo{journal}{Nat. Commun.}} \textbf{\bibinfo{volume}{13}}, \bibinfo{pages}{2496} (\bibinfo{year}{2022}).
+
+\bibitem{zhangDynamicalDegeneracySplitting2023}
+\bibinfo{author}{Zhang, K.}, \bibinfo{author}{Fang, C.} \& \bibinfo{author}{Yang, Z.}
+\newblock \bibinfo{title}{Dynamical {{Degeneracy Splitting}} and {{Directional Invisibility}} in {{Non-Hermitian Systems}}}.
+\newblock \emph{\bibinfo{journal}{Phys. Rev. Lett.}} \textbf{\bibinfo{volume}{131}}, \bibinfo{pages}{036402} (\bibinfo{year}{2023}).
+
+\end{thebibliography}

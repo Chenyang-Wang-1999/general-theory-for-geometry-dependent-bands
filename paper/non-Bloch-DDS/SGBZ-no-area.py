@@ -7,7 +7,6 @@ Copyright © Department of Physics, Tsinghua University. All rights reserved
 import numpy as np
 from cmath import exp, sqrt, pi
 import matplotlib.pyplot as plt
-from palette_manager import get_palette
 from color_set import create_white_to_color_cmap
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.collections import LineCollection
@@ -16,8 +15,13 @@ import sys
 sys.path.append("../HN-model")
 import HN_model_common as HN
 
+# The color palette is shared by all the plotting scripts of this repository,
+# and lives in colors.py at its root.
+import os
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
+from colors import COLORS
+
 CM_IN_INCH = 1 / 2.54
-COLORS = get_palette("matplotlib")
 MY_CMAP = lambda lbl: LinearSegmentedColormap.from_list(f"{lbl}-cmap", [COLORS[lbl], COLORS[lbl]])
 
 class HNModel:
@@ -44,14 +48,12 @@ class HNModel:
         self.Jy1 = exp(gammay + 1j * deltay) * Jy
         self.Jy2 = exp(-gammay + 1j * deltay) * Jy.conjugate()
 
-
 def plot_11_SGBZ_spectrum(model: HNModel):
     bound, loop = HN.get_11_DGBZ_spectrum(
         model.Jx1, model.Jx2, model.Jy1, model.Jy2
     )
     plt.plot(loop.real, loop.imag)
     plt.show()
-
 
 def plot_11_SGBZ_spectrum_uniform_Jnorm(model: HNModel):
     assert(abs(abs(model.Jx) - abs(model.Jy)) < 1e-6)
@@ -71,7 +73,6 @@ def plot_11_SGBZ_spectrum_uniform_Jnorm(model: HNModel):
             [bound[j].imag, -bound[j].imag]
         )
     plt.show()
-
 
 def get_11_SGBZ_EFC(omega0: float, model: HNModel):
     theta_11 = np.linspace(-pi, pi, 2000)
@@ -108,7 +109,6 @@ def get_11_SGBZ_EFC(omega0: float, model: HNModel):
 
     return (theta_11_total, theta_y_total)
 
-
 def get_SGBZ_eigenenergy_by_definition(model: HNModel, theta_11: np.ndarray, theta_y: np.ndarray):
     r'''
         Calculate eigenenergies with given theta_11 and theta_y, according to the following formulas
@@ -130,7 +130,6 @@ def get_SGBZ_eigenenergy_by_definition(model: HNModel, theta_11: np.ndarray, the
     ) * np.exp(1j * theta_y)
     E = model.Jx1 / beta_11 * beta_y + model.Jx2 * beta_11 / beta_y + model.Jy1 / beta_y + model.Jy2 * beta_y
     return E, beta_11, beta_y
-
 
 def paper_plot(model: HNModel, omega0: float):
     ''' Plot the 11-SGBZ spectrum for a given HN model
@@ -217,7 +216,6 @@ def paper_plot(model: HNModel, omega0: float):
     # 保存图像
     fig.savefig("Figures/SGBZ-EFC-color.pdf")
 
-
 def plot_mu_spectrum(model: HNModel):
     Delta_xy = model.deltax - model.deltay
     # theta_11 = np.linspace(-pi, pi, 301)
@@ -284,7 +282,6 @@ def plot_mu_spectrum(model: HNModel):
 
     pcl.remove()
     fig.savefig("Figures/SGBZ-HN-muy.pdf")
-
 
 if __name__ == "__main__":
     model = HNModel(

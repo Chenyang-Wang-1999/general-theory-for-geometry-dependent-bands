@@ -32,6 +32,8 @@ xtick.direction: in
 ytick.direction: in
 xtick.minor.visible: True
 ytick.minor.visible: True
+xtick.minor.ndivs: 2
+ytick.minor.ndivs: 2
 
 legend.fontsize: 6 
 legend.handlelength: 1.2

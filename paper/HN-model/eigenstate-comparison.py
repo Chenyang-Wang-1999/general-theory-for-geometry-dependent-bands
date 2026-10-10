@@ -52,7 +52,7 @@ def plot_eigenstate_distribution():
     plt.style.use("../settings-and-materials/paper_plot.mplstyle")
 
     n1 = 320
-    n2 = 30
+    n2 = 40
     # with open("%s/data/paper-eigenstate-compare-%d-%d.pkl"%(DATA_DIR, n1, n2), "rb") as fp:
     #     beta_list, eigv_ind, GBZ_energy, non_Bloch_basis, coeffs, aspect, n_feature = pickle.load(fp)
 
@@ -430,9 +430,41 @@ def plot_eigenstate_difference():
     fig.savefig("Figures/eigenstate-difference-upper.pdf")
 
 
+def plot_average_eigenstate_distribution():
+    n_feature = 20
+    aspect = 8.0
+    rotation_angle = 0
+
+    with open("%s/data/paper-HN-OBC-2-aspect_%.6f-N_%d.pkl" % (DATA_DIR, aspect, n_feature), "rb") as fp:
+        eigv, eigvec, point_vec, params, shape = pickle.load(fp)
+    
+    # Normalize eigen vectors
+    eigvec = eigvec / np.linalg.norm(eigvec, axis=0)
+
+    # Calculate average of the absolute value of the eigenvectors
+    avg_eigvec = np.mean(np.abs(eigvec), axis=1)
+
+    # rotate point_vec
+    point_vec = point_vec @ np.array([
+        [np.cos(rotation_angle), np.sin(rotation_angle)],
+        [-np.sin(rotation_angle), np.cos(rotation_angle)]
+    ])
+
+    x_mesh = point_vec[:,0].reshape(shape, order='F')
+    y_mesh = point_vec[:,1].reshape(shape, order='F')
+
+    # plot
+    pcl = plt.pcolor(x_mesh, y_mesh, avg_eigvec.reshape(shape, order='F'),
+               vmin=0, vmax=0.03)
+    plt.colorbar(pcl)
+    plt.axis('equal')
+    plt.show()
+
+
 if __name__ == '__main__':
     # plot_eigenstate_distribution()
     # plot_eigenstate_zoomed_in()
     # get_eigenstate_difference(320, 30)
     # plot_eigenstate_difference()
-    print_eigenenergy()
+    # print_eigenenergy()
+    plot_average_eigenstate_distribution()

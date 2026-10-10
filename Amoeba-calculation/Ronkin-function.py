@@ -11,13 +11,15 @@ from BerryPy import TightBinding as tb
 from math import sin, cos, sqrt, pi
 from cmath import exp, log
 import pyvista as pv
-import palette_manager as pm
-
 import matplotlib.pyplot as plt
 import pickle
 
-
-COLORS = pm.get_palette("matplotlib")
+# The color palette is shared by all the plotting scripts of this repository,
+# and lives in colors.py at its root.
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from colors import COLORS
 
 def get_HN_model(Jx1, Jx2, Jy1, Jy2):
     inter_cell = [
@@ -28,7 +30,6 @@ def get_HN_model(Jx1, Jx2, Jy1, Jy2):
     ]
     return tb.TightBindingModel(2, 1, np.array([[1, 0], [0, 1]]), [], inter_cell, [[0, 0]])
 
-
 def eval_ChP(theta_1, theta_2, model: tb.TightBindingModel, mu_vec: np.ndarray, E: complex):
     mu1 = mu_vec[0]
     mu2 = mu_vec[1]
@@ -37,7 +38,6 @@ def eval_ChP(theta_1, theta_2, model: tb.TightBindingModel, mu_vec: np.ndarray, 
     H = model.get_bulk_Hamiltonian_complex((beta1, beta2))
     chp = la.det(np.eye(model.dim) * E - H.todense())
     return np.log(abs(chp)) / ((2 * pi) ** (model.dim))
-
 
 def calculate_Ronkin_func(
     model: tb.TightBindingModel,
@@ -51,7 +51,6 @@ def calculate_Ronkin_func(
         args=(model, mu_vec, E),
         opts={'epsabs': 1e-4, 'epsrel': 1e-6}
     )
-
 
 def generate_HN_data(
     old_data: tuple[float] = None
@@ -70,7 +69,6 @@ def generate_HN_data(
     model = get_HN_model(Jx1, Jx2, Jy1, Jy2)
     return model, (Jx, Jy, gammax, gammay, deltax, deltay)
 
-
 def sweep_Ronkin_func(
     model: tb.TightBindingModel,
     E: complex,
@@ -84,7 +82,6 @@ def sweep_Ronkin_func(
         print((mu1_arr[point_ind], mu2_arr[point_ind]), res)
         Ronkin_func_arr[point_ind] = res[0]
     return Ronkin_func_arr
-
 
 def main_select_param():
     params = [(1.4757-0.0246j), (0.1585-1.0847j), 0.5009, -1.3837, -0.2759, 0.2602]
@@ -105,7 +102,6 @@ def main_select_param():
     print(E)
     plt.savefig("data/spectrum.png")
     plt.close()
-
 
 def main_sweep_GDSE():
     params = [(1.4757-0.0246j), (0.1585-1.0847j), 0.5009, -1.3837, -0.2759, 0.2602]
@@ -130,7 +126,6 @@ def main_sweep_GDSE():
     with open("data/Ronkin_func_sweep_GDSE_dmu_%.2f_%.2f.pkl" % (np.log10(dmu1), np.log10(dmu2)), "wb") as fp:
         pickle.dump((Ronkin_func_arr, mu1_arr, mu2_arr, params), fp)
 
-
 def main_sweep_uniform():
     params = [(1.4757-0.0246j), (0.1585-1.0847j), 0.5009, -1.3837, -0.2759, -0.2759]
     model, params = generate_HN_data(params)
@@ -153,7 +148,6 @@ def main_sweep_uniform():
 
     with open("data/Ronkin_func_sweep_uniform_dmu_%.2f_%.2f.pkl" % (np.log10(dmu1), np.log10(dmu2)), "wb") as fp:
         pickle.dump((Ronkin_func_arr, mu1_arr, mu2_arr, params), fp)
-
 
 def plot_ronkin_3d():
     def load_and_plot(pkl_path, title):

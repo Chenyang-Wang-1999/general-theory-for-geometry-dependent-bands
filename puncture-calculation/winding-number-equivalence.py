@@ -19,11 +19,14 @@ from multiprocessing import Pool
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 import pickle
-import palette_manager as palette
 from scipy import linalg as la
 
-cdict = palette.get_palette("matplotlib")
-
+# The color palette is shared by all the plotting scripts of this repository,
+# and lives in colors.py at its root.
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from colors import COLORS
 
 def SSH_2D(ux1, ux2, vx1, vx2, uy1, uy2, vy1, vy2):
     dim = 2
@@ -49,7 +52,6 @@ def SSH_2D(ux1, ux2, vx1, vx2, uy1, uy2, vy1, vy2):
         dim, site_num, lat_vec, intra_cell, inter_cell
     )
 
-
 def SSH_quasi1D(ux1, ux2, vx1, vx2, uy1, uy2, vy1, vy2, betax) -> tb.TightBindingModel:
     dim = 1
     site_num = 2
@@ -67,7 +69,6 @@ def SSH_quasi1D(ux1, ux2, vx1, vx2, uy1, uy2, vy1, vy2, betax) -> tb.TightBindin
     return tb.TightBindingModel(
         dim, site_num, lat_vec, intra_cell, inter_cell
     )
-
 
 def NH_Haldane(t1, t2, phi, m, gamma):
     dim = 2
@@ -107,7 +108,6 @@ def NH_Haldane(t1, t2, phi, m, gamma):
         dim, site_num, lat_vec, intra_cell, inter_cell
     )
 
-
 def run_all_Cherns(argin):
     t1 = 1
     m = argin[0]
@@ -135,7 +135,6 @@ def run_all_Cherns(argin):
                                                        C_Grid[j]))
     return C_Grid
 
-
 def check_Haldane_model():
     N_M = 50
     N_Phi = 50
@@ -153,7 +152,6 @@ def check_Haldane_model():
     plt.ylabel(r'$M/t_2$')
     plt.colorbar(pcl)
     plt.show()
-
 
 def check_SSH_2D_ChP():
     # model_params = np.random.randn(8)
@@ -195,15 +193,14 @@ def check_SSH_2D_ChP():
         with open("data/SSH-2D-mGBZ-hole_%d.pkl" % (j), "wb") as fp:
             pickle.dump((beta1_arr, mGBZ_torus), fp)
 
-
 def plot_SSH_2D_GBZ_torus():
     E_ref = -0.6784521839887232+0.306284263371469j
     with open("data/SSH-2D-mGBZ-hole_%d.pkl" % (0), "rb") as fp:
         beta1_arr, mGBZ_torus = pickle.load(fp)
     
     print(np.max(np.abs(beta1_arr)), np.min(np.abs(beta1_arr)))
-    color_list = [cdict['bl'], cdict['ol'], cdict['gl'], cdict['rl'], 
-                  cdict['pl'], cdict['brl'], cdict['cl'], cdict['ml'], cdict['yl']]
+    color_list = [COLORS['bl'], COLORS['ol'], COLORS['gl'], COLORS['rl'], 
+                  COLORS['pl'], COLORS['brl'], COLORS['cl'], COLORS['ml'], COLORS['yl']]
     # plt.plot(E_ref.real, E_ref.imag, 'x')
 
     fig = plt.figure()
@@ -244,7 +241,6 @@ def plot_SSH_2D_GBZ_torus():
 
     plt.show()
 
-
 def get_SSH_quasi_1D_GBZ():
     model_params = [0.5002, -0.1031, -2.1329, -0.1353,  1.0413,  1.6011, -1.8877,  0.3436]
     betax = 1.340745534377115
@@ -273,7 +269,6 @@ def get_SSH_quasi_1D_GBZ():
     ax.plot(E.real, E.imag, '.')
 
     plt.show()
-
 
 if __name__ == '__main__':
     # check_Haldane_model()

@@ -73,6 +73,7 @@ def get_beta_GBZ(k1, k2):
     beta_1 = r * np.exp(1j * k1)
     beta_2 = np.sqrt(np.abs((Jx2 * beta_1 + Jy1) / (Jx1 / beta_1 + Jy2))) * np.exp(1j * k2)
     E_ref = Jx1 * beta_2 / beta_1 + Jx2 * beta_1 / beta_2 + Jy1 / beta_2 + Jy2 * beta_2
+    E_ref = 1e-2
 
     # 1 plot strip GBZ spectrum
     plt.figure()
@@ -168,6 +169,10 @@ def random_polygon_OBC(radius_min: int = 25, radius_max: int = 50, n_sides: int 
     theta_list = np.random.rand(n_sides - 1) * ((2 * pi - min_total_angle) / (n_sides - 1)) + min_total_angle/(n_sides - 1)
     theta_initial = np.random.rand() * 2 * pi
     arg_list = np.hstack([[0], np.cumsum(theta_list)]) + theta_initial
+    return polygon_OBC(r_list, arg_list)
+
+def polygon_OBC(r_list, arg_list):
+    n_sides = len(r_list)
     unit_vec = np.exp(1j * arg_list)
 
     # get cusps
@@ -361,10 +366,11 @@ def spectrum_polygon():
         file_id += 1
     fname_prefix = "data/HN-model-OBC-polygon-%d"%(file_id)
 
-    Jx1 = np.random.randn() + 1j * np.random.randn()
-    Jx2 = np.random.randn() + 1j * np.random.randn()
-    Jy1 = np.random.randn() + 1j * np.random.randn()
-    Jy2 = np.random.randn() + 1j * np.random.randn()
+    # Jx1 = np.random.randn() + 1j * np.random.randn()
+    # Jx2 = np.random.randn() + 1j * np.random.randn()
+    # Jy1 = np.random.randn() + 1j * np.random.randn()
+    # Jy2 = np.random.randn() + 1j * np.random.randn()
+    Jx1, Jx2, Jy1, Jy2 = HN.Default_Model_Params 
     # Jy2_norm = np.random.randn()
     # Jy2_arg = log(Jx1).imag + log(Jx2).imag - log(Jy1).imag
     # Jy2 = Jy2_norm * exp(1j * Jy2_arg)
@@ -375,8 +381,8 @@ def spectrum_polygon():
     r_vec = [np.sqrt(np.abs(Jx1/Jx2)), np.sqrt(np.abs(Jy1/Jy2))]
     model = model.get_exponentially_scaled_system(r_vec)
 
-    radius_min = 25
-    radius_max = 50
+    radius_min = 30
+    radius_max = 30
     n_sides = 4
     for j in range(10):
         r_list, arg_list, all_points = random_polygon_OBC(radius_min, radius_max, n_sides)
@@ -414,6 +420,46 @@ def spectrum_diamond_square():
         eigv, eigvec = la.eig(H.todense())
 
         with open("%s-%d.pkl"%(fname_prefix, j), "wb") as fp:
+            pickle.dump((r_list, arg_list, model_param, all_points, eigv, eigvec, r_vec), fp)
+
+
+def paper_spectrum_triganles():
+    Jx1, Jx2, Jy1, Jy2 = HN.Default_Model_Params 
+    # Jy2_norm = np.random.randn()
+    # Jy2_arg = log(Jx1).imag + log(Jx2).imag - log(Jy1).imag
+    # Jy2 = Jy2_norm * exp(1j * Jy2_arg)
+    model_param = (Jx1, Jx2, Jy1, Jy2)
+
+    model = HN_model_tightbinding(*model_param)
+
+    r_vec = [np.sqrt(np.abs(Jx1/Jx2)), np.sqrt(np.abs(Jy1/Jy2))]
+    model = model.get_exponentially_scaled_system(r_vec)
+
+    param_set = [
+        {
+            "arg_list": np.array([0, 1, 2]) * 2 * np.pi / 3,
+            "r_list": np.array([30.5, 30.5, 30.5]),
+            "suffix": "equilateral"
+        },
+        {
+            "arg_list": np.array([0, 3 * np.pi / 4, 5 * np.pi / 4]),
+            "r_list": np.array([30.5, 30.5 / np.sqrt(2), 30.5 / np.sqrt(2)]),
+            "suffix": "othogonal-1"
+        },
+        {
+            "arg_list": np.array([0, 3 * np.pi / 4, 3 * np.pi / 2]),
+            "r_list": np.array([30.5, 30.5 / np.sqrt(2), 30.5]),
+            "suffix": "othogonal-2"
+        }
+    ]
+    for curr_param in param_set:
+        r_list, arg_list, all_points = polygon_OBC(
+            curr_param["r_list"], curr_param["arg_list"]
+        )
+        H = model.generate_OBC_bulk(all_points)
+        eigv, eigvec = la.eig(H.todense())
+
+        with open("data/OBC-spectrum-triangles-%s.pkl"%(curr_param["suffix"]), "wb") as fp:
             pickle.dump((r_list, arg_list, model_param, all_points, eigv, eigvec, r_vec), fp)
 
 
@@ -493,6 +539,27 @@ def plot_polygon_spectrum():
     fname_prefix = "data/HN-model-OBC-polygon-%d"%(file_id)
     for j in range(10):
         with open("%s-%d.pkl"%(fname_prefix, j), "rb") as fp:
+            r_list, arg_list, model_param, all_points, eigv, eigvec, r_vec = pickle.load(fp)
+        print(model_param)
+        print(np.sum(np.log(model_param[:2]).imag) - np.sum(np.log(model_param[2:]).imag))
+        print(len(all_points))
+        all_points = np.asarray(all_points)
+        plt.figure(1)
+        plt.plot(eigv.real, eigv.imag, '.')
+
+        plt.figure(2)
+        plt.scatter(all_points[:,0],all_points[:,1], c = np.abs(eigvec[:,10]))
+        plt.show()
+
+
+def plot_triangles():
+    fname_suffix = [
+        "equilateral",
+        "othogonal-1",
+        "othogonal-2"
+    ]
+    for suffix in fname_suffix:
+        with open("data/OBC-spectrum-triangles-%s.pkl"%(suffix), "rb") as fp:
             r_list, arg_list, model_param, all_points, eigv, eigvec, r_vec = pickle.load(fp)
         print(model_param)
         print(np.sum(np.log(model_param[:2]).imag) - np.sum(np.log(model_param[2:]).imag))
@@ -604,25 +671,7 @@ def paper_HN_sweep_aspect_and_size():
     # aspect: 8, 4, 2, 1, 1/2, 1/4, 1/8
     # size: (10, 20, 30) * sqrt(8 / x)
 
-    Jx = 1 + 1j
-    Jy = 1.5 + 1.2j
-    deltax = 0.1 * np.pi
-    deltay = 0.2 * np.pi
-    gammax = 0.2
-    gammay = 0.1
-
-    Jx1 = (1 + gammax) * Jx * exp(1j * deltax)
-    Jx2 = (1 - gammax) * (Jx.conjugate()) * exp(1j * deltax)
-    Jy1 = (1 + gammay) * Jy * exp(1j * deltay)
-    Jy2 = (1 - gammay) * (Jy.conjugate()) * exp(1j * deltay)
-
-    # k = np.linspace(0, 2 * pi, 100)
-    # bound = 2 * np.sqrt(2 * np.sqrt(Jx1 * Jx2 * Jy1 * Jy2) * np.cos(k) + Jx1 * Jx2 + Jy1 * Jy2)
-    # plt.plot(bound.real, bound.imag, 'r.')
-    # plt.plot(-bound.real, -bound.imag, 'r.')
-    # plt.axis("equal")
-    # plt.show()
-    # return 
+    Jx1, Jx2, Jy1, Jy2 = HN.Default_Model_Params
 
     model = HN_model_tightbinding(Jx1, Jx2, Jy1, Jy2)
     r_vec = [np.sqrt(np.abs(Jx1/Jx2)), np.sqrt(np.abs(Jy1/Jy2))]
@@ -658,12 +707,11 @@ def paper_HN_sweep_aspect_and_size():
             H = model_2d.get_bulk_Hamiltonian_complex((None, None))
             eigv, eigvec = la.eig(H.todense())
 
-            with open("data/paper-HN-OBC-3-aspect_%.6f-N_%d.pkl"%(aspect, N), "wb") as fp:
+            with open("data/paper-HN-OBC-2-aspect_%.6f-N_%d.pkl"%(aspect, N), "wb") as fp:
                 pickle.dump((
                     eigv, eigvec, model_2d.lattice2cart(np.asarray(model_2d.SiteCoord).transpose()).transpose(),
                     (Jx1, Jx2, Jy1, Jy2),
                     (N1, N2),
-                    (Jx, Jy, gammax, gammay, deltax, deltay)
                 ), fp)
 
 
@@ -715,17 +763,8 @@ def paper_HN_sweep_aspect_and_size_xy():
     # boundary: (1,0), (0,1)
     # aspect: 8, 4, 2, 1, 1/2, 1/4, 1/8
     # size: (10, 20, 30) * sqrt(8 / x)
-    Jx = 1 + 1j
-    Jy = 1.5 + 1.2j
-    deltax = 0.1 * np.pi
-    deltay = 0.2 * np.pi
-    gammax = 0.2
-    gammay = 0.1
 
-    Jx1 = (1 + gammax) * Jx * exp(1j * deltax)
-    Jx2 = (1 - gammax) * (Jx.conjugate()) * exp(1j * deltax)
-    Jy1 = (1 + gammay) * Jy * exp(1j * deltay)
-    Jy2 = (1 - gammay) * (Jy.conjugate()) * exp(1j * deltay)
+    Jx1, Jx2, Jy1, Jy2 = HN.Default_Model_Params
 
     model = HN_model_tightbinding(Jx1, Jx2, Jy1, Jy2)
     r_vec = [np.sqrt(np.abs(Jx1/Jx2)), np.sqrt(np.abs(Jy1/Jy2))]
@@ -755,12 +794,11 @@ def paper_HN_sweep_aspect_and_size_xy():
             H = model_2d.get_bulk_Hamiltonian_complex((None, None))
             eigv, eigvec = la.eig(H.todense())
 
-            with open("data/paper-HN-OBC-3-xy-aspect_%.6f-N_%d.pkl"%(aspect, N), "wb") as fp:
+            with open("data/paper-HN-OBC-2-xy-aspect_%.6f-N_%d.pkl"%(aspect, N), "wb") as fp:
                 pickle.dump((
                     eigv, eigvec, model_2d.lattice2cart(np.asarray(model_2d.SiteCoord).transpose()).transpose(),
                     (Jx1, Jx2, Jy1, Jy2),
                     (N1, N2),
-                    (Jx, Jy, gammax, gammay, deltax, deltay)
                 ), fp)
 
 
@@ -1210,7 +1248,7 @@ def plot_quasi_1D_spectrum():
 
 
 if __name__ == '__main__':
-    # get_beta_GBZ(0, 0)
+    get_beta_GBZ(0, 0)
     # test_ellipse()
     # spectrum_ellipse()
     # plot_ellipse_spectrum()
@@ -1222,8 +1260,8 @@ if __name__ == '__main__':
     # plot_HN_BZ()
     # plot_GBZ_candidates()
     # paper_HN_sweep_aspect_and_size()
-    test_paperplot_OBC()
-    plot_spectrum_percentage()
+    # test_paperplot_OBC()
+    # plot_spectrum_percentage()
     # plot_GBZ_new_program()
     # paper_quasi_1D_GBZ_x()
     # for N in [22, 24, 26, 28]:
@@ -1241,3 +1279,5 @@ if __name__ == '__main__':
     #     paper_get_non_Bloch_sols(E_ref)
 
     # paper_HN_calculate_OBC()
+    # paper_spectrum_triganles()
+    # plot_triangles()

@@ -11,13 +11,16 @@ from numpy import pi
 import pyvista as pv
 import poly_tools as pt
 import matplotlib.pyplot as plt
-from palette_manager import get_palette
 import sys
 import pickle
 sys.path.append("../paper/HN-model")
 import HN_model_common as HN
 
-COLOR = get_palette("matplotlib")
+# The color palette is shared by all the plotting scripts of this repository,
+# and lives in colors.py at its root.
+import os
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from colors import COLORS
 
 def get_ChP(gammax, gammay, Jx, Jy, alpha):
     coeffs = pt.CScalarVec(
@@ -38,7 +41,6 @@ def get_ChP(gammax, gammay, Jx, Jy, alpha):
     chp.set_Laurent_by_terms(coeffs, degs)
     return chp
 
-
 def get_ChP_eq(chp: pt.CLaurent, E, beta1):
     chp_1d = chp.partial_eval(
         pt.CScalarVec([E, beta1]),
@@ -56,7 +58,6 @@ def get_ChP_eq(chp: pt.CLaurent, E, beta1):
     for i in range(len(coeffs)):
         eq_np[max_deg - degs[i]] = coeffs[i]
     return eq_np, M
-
 
 def plot_mGBZ():
     Jx = 1
@@ -101,12 +102,11 @@ def plot_mGBZ():
             picked_roots[:, 1].imag,
             np.log(picked_roots[:, 0]).imag
         ]),
-        color=COLOR['ol']
+        color=COLORS['ol']
     )
     cld = pv.Cylinder(radius=gammay, height=2*pi, direction=(0, 0, 1))
-    pl.add_mesh(cld, color=COLOR['bf'], opacity=0.5)
+    pl.add_mesh(cld, color=COLORS['bf'], opacity=0.5)
     pl.show()
-
 
 def get_zeros_for_E(
     E,
@@ -136,7 +136,6 @@ def get_zeros_for_E(
         np.column_stack([Jx_arg + Deltax, Jy_arg - Deltay]),
         np.column_stack([Jx_arg - Deltax, Jy_arg - Deltay]),
     ]
-
 
 def concatenate_lines(lines: list[np.ndarray]):
     ''' Concatenate the lines (line[j].shape = (n, 2)) in the list by the following rules:
@@ -239,7 +238,6 @@ def concatenate_lines(lines: list[np.ndarray]):
     
     return result
 
-
 def theoretical_winding_step(Jx, Jy, deltax, alpha, E):
     zeros = get_zeros_for_E(E, Jx, Jy, deltax)
     zeros = concatenate_lines(zeros)
@@ -251,7 +249,6 @@ def theoretical_winding_step(Jx, Jy, deltax, alpha, E):
         positive_ones = diff_zero[diff_zero >= 0]
         width += np.sum(positive_ones)
     return width
-
 
 def main_plot_zeros_for_E():
     # Jx = 1
@@ -286,7 +283,6 @@ def main_plot_zeros_for_E():
     plt.ylim([0, 2 * pi])
     plt.show()
 
-
 def compare_numerical():
     alpha = 3
     with open(f"data/HN-alpha-{alpha}.pkl", "rb") as f:
@@ -314,7 +310,6 @@ def compare_numerical():
     #         # print("For E = ", E, "kx, ky = ", kx / pi, ky / pi)
     #         # print(w / 2 / pi, w_left_list[row_ind, col_ind] / 2 / pi, w_right_list[row_ind, col_ind] / 2 / pi)
     #         # print("ratio", w / w_right_list[row_ind, col_ind])
-
 
 if __name__ == '__main__':
     # plot_mGBZ() 

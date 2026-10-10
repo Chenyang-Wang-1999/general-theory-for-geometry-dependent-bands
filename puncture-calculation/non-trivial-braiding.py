@@ -16,10 +16,13 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import Slider
 from scipy import linalg as la
 import pickle
-from palette_manager import get_palette
 
-cdict = get_palette("matplotlib")
-
+# The color palette is shared by all the plotting scripts of this repository,
+# and lives in colors.py at its root.
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+from colors import COLORS
 
 def Hbr_model(tp, tm, ta, lam1, lam2, lam3, m):
     dim = 1
@@ -45,7 +48,6 @@ def Hbr_model(tp, tm, ta, lam1, lam2, lam3, m):
     ]
 
     return tb.TightBindingModel(dim, site_num, lat_vec, intra_cell, inter_cell)
-
 
 def Hbr_model_2D(tx, tp, tm, ta, lam1, lam2, lam3, m):
     dim = 2
@@ -76,7 +78,6 @@ def Hbr_model_2D(tx, tp, tm, ta, lam1, lam2, lam3, m):
     ]
 
     return tb.TightBindingModel(dim, site_num, lat_vec, intra_cell, inter_cell)
-
 
 def replicate_reported_GBZs(lam3: float):
     tp, tm, ta, lam1, lam2, m = 0.15, 0.85, 0.2, 0, 0, 0.1
@@ -111,7 +112,6 @@ def replicate_reported_GBZs(lam3: float):
     
     plt.show()
 
-
 def test_small_ring(lam3: float):
     tp, tm, ta, lam1, lam2, m = 0.15, 0.85, 0.2, 0, 0, 0.1
 
@@ -127,7 +127,6 @@ def test_small_ring(lam3: float):
     plt.plot(eigv.real, eigv.imag, '.')
 
     plt.show()
-
 
 def calculate_minor_GBZ(betax_norm: float):
     tp, tm, ta, lam1, lam2, m = 0.15, 0.85, 0.2, 0, 0, 0.1
@@ -150,7 +149,6 @@ def calculate_minor_GBZ(betax_norm: float):
     with open("data/non-trivial-braiding/GBZ_torus_lam3%.3f_betax%.3f.pkl" % (lam3, betax_norm), "wb") as f:
         pickle.dump((betax_loop, GBZ_torus), f)
 
-
 def plot_GBZ_torus():
     lam3 = 0.4
     betax_norm = 1
@@ -159,8 +157,8 @@ def plot_GBZ_torus():
         beta1_arr, mGBZ_torus = pickle.load(fp)
 
     print(np.max(np.abs(beta1_arr)), np.min(np.abs(beta1_arr)))
-    color_list = [cdict['bl'], cdict['ol'], cdict['gl'], cdict['rl'], 
-                  cdict['pl'], cdict['brl'], cdict['cl'], cdict['ml'], cdict['yl']]
+    color_list = [COLORS['bl'], COLORS['ol'], COLORS['gl'], COLORS['rl'], 
+                  COLORS['pl'], COLORS['brl'], COLORS['cl'], COLORS['ml'], COLORS['yl']]
     # plt.plot(E_ref.real, E_ref.imag, 'x')
 
     fig = plt.figure()
@@ -201,7 +199,6 @@ def plot_GBZ_torus():
     scroll_slider.on_changed(update)
 
     plt.show()
-
 
 if __name__ == '__main__':
     # lam3 = float(input("lambda 3:"))

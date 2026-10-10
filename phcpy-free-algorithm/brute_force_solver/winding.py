@@ -6,40 +6,59 @@ Copyright © Department of Physics, Tsinghua University. All rights reserved
 
 ''' Functions for winding number calculations '''
 
-# import poly_tools as pt
-import c_solver_2D as pt
+import poly_tools as pt
 import numpy as np
 
 from scipy import integrate
 from math import pi
 from scipy import sparse
 from scipy.sparse import linalg as spla
-import BerryPy.TightBinding as tb
+
+
+class PolyDiffContext:
+    """Bundle polynomial value/derivative evaluation for reuse."""
+    char_poly: pt.CLaurent
+    dchar_poly: list[pt.CLaurent]
+
+    def __init__(self, char_poly: pt.CLaurent):
+        self.char_poly = char_poly
+        self.dchar_poly = [char_poly.derivative(var_ind) for var_ind in range(char_poly.dim)]
+
+    def eval_val(self, var: tuple[complex]) -> complex:
+        return self.char_poly.eval(pt.CScalarVec(var))
+
+    def eval_partials(self, var: tuple[complex]) -> list[complex]:
+        var_ctype = pt.CScalarVec(var)
+        return [dchar.eval(var_ctype) for dchar in self.dchar_poly]
+    
+    def eval_dmu2(self, var: tuple[complex]):
+        '''Reture (dmu2/dmu1, dmu2/dtheta1)'''
+        partials = self.eval_partials(var)
+        complex_diff = var[1] * partials[1] / (var[2] * partials[2])
+        return (-complex_diff.real, complex_diff.imag)
+
 
 class WindingFun:
+    poly_diff: PolyDiffContext
     char_poly: pt.CLaurent
     loop_fun: callable  # Input: t. Output: param, dparam/dt
     dchar_poly: list[pt.CLaurent]
     loop_range: tuple[float, float]
 
     def __init__(self, char_poly: pt.CLaurent, loop_fun: callable, loop_range: tuple[float, float]):
-        self.char_poly = char_poly
+        self.poly_diff = PolyDiffContext(char_poly)
+        # Keep compatibility with existing code that accesses these attributes.
+        self.char_poly = self.poly_diff.char_poly
+        self.dchar_poly = self.poly_diff.dchar_poly
         self.loop_fun = loop_fun
-        self.dchar_poly = [self.char_poly.derivative(var_ind) for var_ind in range(char_poly.dim)]
         self.loop_range = loop_range
 
     def __call__(self, t: float) -> complex:
         param, dparam_dt = self.loop_fun(t)
-        param_ctype = pt.CScalarVec(param)
-        val = self.char_poly.eval(param_ctype)
-        dval_dt = sum([dchar.eval(param_ctype) * dparam_dt[param_ind] for param_ind, dchar in enumerate(self.dchar_poly)])
+        val = self.poly_diff.eval_val(param)
+        partials = self.poly_diff.eval_partials(param)
+        dval_dt = sum(partials[param_ind] * dparam_dt[param_ind] for param_ind in range(len(partials)))
         return (dval_dt / val).imag
-    
-    def eval_dmu2(self, var: tuple[complex]):
-        '''Reture (dmu2/dmu1, dmu2/dtheta1)'''
-        var_ctype = pt.CScalarVec(var)
-        complex_diff = var[1] * self.dchar_poly[1].eval(var_ctype) / (var[2] * self.dchar_poly[2].eval(var_ctype))
-        return (-complex_diff.real, complex_diff.imag)
 
 
 class MatWindingFun(WindingFun):

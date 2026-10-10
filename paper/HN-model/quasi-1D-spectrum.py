@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 from cmath import sqrt
 
 import numpy as np
-import numpy_extended as npe
 from scipy import sparse
 from scipy.sparse import linalg as spla
 
@@ -18,14 +17,60 @@ sys.path.append("..")
 import figure_settings_common as fs
 import HN_model_common as HN
 
-import palette_manager as pm
-
-COLORs = pm.get_palette("matplotlib")
-
+# The color palette is shared by all the plotting scripts of this repository,
+# and lives in colors.py at its root.
+import os
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
+from colors import COLORS
 
 plt.style.use("../settings-and-materials/paper_plot.mplstyle")
 
 FILL_COLOR = "#ff7f0eff"
+
+
+def continuous_sqrt(x: np.ndarray) -> np.ndarray:
+    '''
+    Continuously calculate the square root of an array of complex numbers.
+
+    The first point takes the principal square root.  For every later point the
+    sign of the previous root is kept when that root is closer to the
+    difference of the two candidate square roots, is flipped when it is closer
+    to their sum, and is reset to the negated root when the two distances are
+    equal (the tie rule of the original implementation).  The sign walk is done
+    with cumulative sums, so there is no Python loop over the array.
+
+    This is a stand-alone replacement of ``numpy_extended.continuous_sqrt``,
+    the pybind11 wrapper around a C++ implementation that the scripts used to
+    import; it returns the same values bit for bit.  Its argument is a 1-D array
+    of complex numbers; real input is cast to complex.  The same function is
+    also defined in HN_model_common.py.
+    '''
+    root = np.sqrt(np.asarray(x, dtype=complex))
+    if root.ndim != 1:
+        raise ValueError("continuous_sqrt expects a 1-D array of complex numbers")
+    if root.size < 2:
+        return root
+
+    # squared distances from the previous root to the two candidate roots
+    dist_diff = root[:-1] - root[1:]
+    dist_sum = root[:-1] + root[1:]
+    n_diff = dist_diff.real * dist_diff.real + dist_diff.imag * dist_diff.imag
+    n_sum = dist_sum.real * dist_sum.real + dist_sum.imag * dist_sum.imag
+    keep = n_diff < n_sum
+    flip = n_sum < n_diff
+    tie = ~(keep | flip)
+
+    # The sign is kept on `keep`, flipped on `flip` and reset to -1 on `tie`,
+    # hence the sign at j is (-1) ** (number of flips after the last tie up to
+    # j), negated as soon as a tie has happened.
+    last_tie = np.maximum.accumulate(np.where(tie, np.arange(flip.size), -1))
+    flips = np.concatenate(([0], np.cumsum(flip)))
+    odd = (flips[1:] - flips[last_tie + 1]) % 2 == 1
+    negative = np.where(last_tie < 0, odd, ~odd)
+
+    out = root.copy()
+    out[1:] = np.where(negative, -root[1:], root[1:])
+    return out
 
 
 def plot_quasi_1D_x():
@@ -109,7 +154,6 @@ def plot_quasi_1D_x():
     plt_beta[0].remove()
     fig.savefig("Figures/quasi-1D-x-N_15-beta.pdf")
 
-
 def plot_quasi_1D_y():
     with open("../../puncture-calculation/data/paper-quasi-1D-y-N_15.pkl", "rb") as fp:
         E, beta, params, N, r_fit_list = pickle.load(fp)
@@ -190,7 +234,6 @@ def plot_quasi_1D_y():
     plt_beta[0].remove()
     fig.savefig("Figures/quasi-1D-y-N_15-beta.pdf")
 
-
 def plot_quasi_1D_11():
     with open("../../puncture-calculation/data/paper-quasi-1D-11-N_15.pkl", "rb") as fp:
         E, beta, params, N, r_fit_list = pickle.load(fp)
@@ -206,7 +249,7 @@ def plot_quasi_1D_11():
     ax.set_ylim([-4, 4])
 
     # theory
-    bound = 2 * npe.continuous_sqrt(
+    bound = 2 * continuous_sqrt(
         2 * sqrt(Jx1 * Jx2 * Jy1 * Jy2) * np.linspace(-1, 1, 500)
         + (Jx1 * Jx2)
         + (Jy1 * Jy2)
@@ -269,7 +312,6 @@ def plot_quasi_1D_11():
     plt_beta[0].remove()
     plt.savefig("Figures/quasi-1D-11-N_15-beta.pdf")
 
-
 def plot_minor_beta_11():
     # 11 direction
     with open("../../puncture-calculation/data/paper-quasi-1D-11-N_15.pkl", "rb") as fp:
@@ -306,7 +348,6 @@ def plot_minor_beta_11():
     beta_plt[0].remove()
     fig.savefig("Figures/quasi-1D-11-N_15-minor.pdf")
 
-
 def plot_minor_beta_x():
     # 11 direction
     with open("../../puncture-calculation/data/paper-quasi-1D-x-N_15.pkl", "rb") as fp:
@@ -342,7 +383,6 @@ def plot_minor_beta_x():
     beta_plt[0].remove()
     fig.savefig("Figures/quasi-1D-x-N_15-minor.pdf")
 
-
 def plot_minor_beta_y():
     # 11 direction
     with open("../../puncture-calculation/data/paper-quasi-1D-y-N_15.pkl", "rb") as fp:
@@ -377,7 +417,6 @@ def plot_minor_beta_y():
     ax.legend()
     beta_plt[0].remove()
     fig.savefig("Figures/quasi-1D-y-N_15-minor.pdf")
-
 
 def plot_eigenstates_beta_11():
     ''' Plot distributions for eigenstates '''
@@ -421,7 +460,6 @@ def plot_eigenstates_beta_11():
         ax.plot(np.arange(len(curr_eigvec)), np.abs(curr_eigvec.flatten()), linewidth=0.5, 
                 color=color_map(norm_fun(np.log(curr_beta).imag)))
     plt.show()
-
 
 if __name__ == '__main__':
     plot_quasi_1D_x()

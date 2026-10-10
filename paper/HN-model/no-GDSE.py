@@ -8,13 +8,17 @@ import pyvista as pv
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
-import palette_manager as pm
 from math import pi
+
+# The color palette is shared by all the plotting scripts of this repository,
+# and lives in colors.py at its root.
+import os
+import sys
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
+from colors import COLORS
 
 plt.style.use("../settings-and-materials/paper_plot.mplstyle")
 CM = 1/2.54
-
-COLORS = pm.get_palette("matplotlib")
 
 DATA_FOLDER = "../../ChP-winding-algorithm/data/"
 
@@ -82,7 +86,6 @@ def plot_winding_3D(alpha: int):
     plotter.screenshot(f"Figures/winding-3D-alpha-{alpha}.png")
     # plotter.export_gif(f"Figures/winding-3D-alpha-{alpha}.gif", fps=5, quality=10)
 
-
 def plot_Wstrip():
     fig = plt.figure(figsize=(4*CM, 4*CM))
     ax = fig.gca()
@@ -97,7 +100,6 @@ def plot_Wstrip():
     ax.set_xlabel(r"$r$")
     ax.set_ylabel(r"$W_\mathrm{strip}(r)$")
     fig.savefig("Figures/W-strip-no-GDSE.pdf")
-
 
 def plot_E():
     fig = plt.figure(figsize=(1*CM, 5*CM))
@@ -122,7 +124,6 @@ def plot_E():
     ax.set_yticks([], minor=True)
     fig.savefig("Figures/no-NHSE-spectrum.pdf")
 
-
 def plot_mGBZ():
     fig = plt.figure(figsize=(4*CM, 4*CM))
     ax = fig.gca()
@@ -140,7 +141,6 @@ def plot_mGBZ():
     ax.set_xticks([-1, 0, 1], minor=False)
     ax.set_yticks([-1, 0, 1], minor=False)
     fig.savefig("Figures/no-GDSE-mGBZ.pdf")
-
 
 def plot_left_and_right():
     alpha_list = range(-3, 4)
@@ -178,7 +178,6 @@ def plot_left_and_right():
     ax.plot([-3.2, 3.2], [0, 0], '--', color="grey")
     ax.legend(handles=[pl_left[0], pl_right[0]])
     fig.savefig("Figures/no-GDSE-left-and-right-limit.pdf")
-
 
 if __name__ == "__main__":
     # plot_winding_3D(2)
