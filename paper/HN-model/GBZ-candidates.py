@@ -9,11 +9,14 @@ import pickle
 from HN_model_common import *
 
 ##### DGBZ tools #####
+# ``poly_tools`` / ``partial_GBZ_solver`` / ``GBZ_manifold`` are only used by the
+# routines that actually run the punctured-GBZ solver (``get_GBZ_candidates``,
+# ``plot_GBZ_candidates`` and the [11] winding calculation).  They are imported
+# lazily inside those routines so that ``plot_11_DGBZ_spectrum`` - the only
+# routine needed for the figure - runs without building the C++ extensions and
+# without PHCpy, since the [11]-SGBZ it draws is analytic.
 import sys
 sys.path.append("../../puncture-calculation")
-import poly_tools as pt
-import partial_GBZ_solver as pGs
-import GBZ_manifold as Gm
 
 ##### Figure plot #####
 import matplotlib.pyplot as plt
@@ -48,6 +51,9 @@ def plot_11_DGBZ_spectrum():
 
 def get_GBZ_candidates():
     ''' Calculate GBZ candidates for E1 and E2 '''
+
+    import poly_tools as pt
+    import partial_GBZ_solver as pGs
 
     ### get model ChP ###
     f = get_HN_model(*Default_Model_Params)
@@ -84,6 +90,8 @@ def get_GBZ_candidates():
 
 def plot_GBZ_candidates():
     ''' Plot GBZ candidates '''
+    import GBZ_manifold as Gm
+
     which = "E1"
     formal_plot = True
 
@@ -206,6 +214,9 @@ def calculate_x_total_winding_for_r(E, Jx1, Jx2, Jy1, Jy2, r):
 
 def calculate_11_total_winding_for_r(E, Jx1, Jx2, Jy1, Jy2, r):
     ''' Calculate all the GBZ candidates for given r '''
+    import poly_tools as pt
+    import partial_GBZ_solver as pGs
+
     a = abs(Jx2 * Jy2) * r + abs(Jx1 * Jy1) / r
     b = abs(Jx2 * Jy2) * r - abs(Jx1 * Jy1) / r
     theta_x1 = np.log(Jx1).imag
@@ -336,9 +347,13 @@ def plot_total_winding_11():
     
 
 if __name__ == '__main__':
-    # plot_11_DGBZ_spectrum()
-    # get_GBZ_candidates()
+    # Figure 3: [11]-SGBZ spectrum.  Analytic; needs only NumPy/SciPy/Matplotlib
+    # (plus BerryPy, through HN_model_common).
+    plot_11_DGBZ_spectrum()
+
+    # The routines below run the punctured-GBZ solver, so they additionally need the
+    # compiled ``poly_tools`` / ``GBZ_manifold`` extensions and PHCpy - see README.
+    # get_GBZ_candidates()      # -> data/GBZ-candidates-{E1,E2}.pkl
     # plot_GBZ_candidates()
-    # plot_total_winding()
-    plot_total_winding_11()
-    # plot_total_winding_x()
+    # plot_total_winding_11()
+    # plot_total_winding_x()    # pure NumPy, kept for reference

@@ -57,5 +57,5 @@ def print_info(f_ind: int):
 
 if __name__ == '__main__':
     for f_ind in range(6):
-        # main_plot(f_ind)
+        main_plot(f_ind)
         print_info(f_ind)

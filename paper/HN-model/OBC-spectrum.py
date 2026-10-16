@@ -10,7 +10,6 @@ import pickle
 import HN_model_common as HN
 import matplotlib.pyplot as plt
 import sys
-import shapely
 sys.path.append('..')
 import figure_settings_common as fs
 import numpy as np
@@ -150,6 +149,11 @@ def plot_11_OBC_spectrum_marked_SGBZ(
         which_stripe_GBZ=0    # 0: None, 1: (1,1), 2: xy
 ):
     ''' Given the aspect and site number, plot the spectrum and save '''
+    # Only this routine needs shapely; importing it lazily keeps the figure
+    # routines (plot_OBC_with_given_aspect / plot_11_OBC_spectrum) down to
+    # NumPy + SciPy + Matplotlib + BerryPy.
+    import shapely
+
     ### load data ###
     with open("%s/paper-HN-OBC-2-aspect_%.6f-N_%d.pkl" % (
         DATA_DIR, aspect, N
@@ -202,43 +206,6 @@ def plot_11_OBC_spectrum_marked_SGBZ(
     )
 
 
-def plot_percentage():
-    with open("%s/percentage-of-points.pkl" % (
-        DATA_DIR
-    ), "rb") as fp:
-        perc_points = pickle.load(fp)
-    perc_points = np.asarray(perc_points)
-
-    fig = plt.figure(figsize=(5 * fs.cm, 9.65025 * fs.cm))
-    ax = fig.gca()
-    ax.set_position([0.2, 0.2, 0.8, 0.8])
-    ax.set_xlabel("L[11]/Ly")
-    ax.set_ylabel("N[11]/Ntot")
-    ax.set_xticks([2, 4, 8, 16, 32])
-    ax.set_xticks([], minor=True)
-    ax.set_xlim([1, 33])
-    label_list = {
-        20: "Ntot = 3200",
-        30: "Ntot = 7200",
-        40: "Ntot = 12800",
-    }
-    style = {20: ".-", 30: ".--", 40: ".:"}
-    hdl = []
-    ax.plot([1, 33], [1, 1], 'k--', linewidth=0.5)
-    for N in [20, 30, 40]:
-        curr_val = perc_points[np.where(np.abs(perc_points[:,1] - N) < 1e-2),:][0]
-        print(curr_val)
-        hdl += ax.plot(
-            1/curr_val[:,0], curr_val[:,2], style[N], 
-            label=label_list[N],
-            # markerfacecolor="none",
-            markersize=3
-            # markeredgewidth=0.5
-        )
-    ax.legend(handles=hdl, handlelength=1.9)
-    fig.savefig("Figures/percentage-of-points.pdf")
-
-
 if __name__ == '__main__':
     # pass
     plot_OBC_with_given_aspect(1/8, 40)
@@ -248,5 +215,3 @@ if __name__ == '__main__':
     plot_11_OBC_spectrum(1, 40, 0)
     plot_11_OBC_spectrum(8, 40, 2)
     # plot_11_OBC_spectrum_marked_SGBZ(1/8, 40, 1)
-
-    # plot_percentage()

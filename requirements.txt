@@ -1,0 +1,35 @@
+# Python packages used to reproduce the figures of
+# "General theory for geometry-dependent non-Hermitian bands".
+#
+#   python -m pip install -r requirements.txt
+#
+# Python 3.9 was used for the archived runs.  Python 3.9-3.11 is recommended:
+# the data pickles carry the NumPy 1.x layout, and NumPy 1.23.5 has no wheels
+# for Python 3.12 and later.  See the README section "Data format and runtime
+# environment".
+
+numpy==1.23.5
+scipy==1.13.0
+matplotlib==3.8.0
+
+# Only used by paper/HN-model/OBC-spectrum.py::plot_11_OBC_spectrum_marked_SGBZ,
+# which is not called by default.
+shapely==2.0.4
+
+# Optional.  BerryPy probes for these at install time (its setup.py writes
+# BerryPy/flags.py) and only its symbolic routines need them: get_GBZ() requires
+# both, get_characteristic_polynomial_data() requires SymPy.  No script under
+# paper/ calls either, so the figures are reproduced without them.  They are
+# installed in the archived environment and are only needed by the auxiliary
+# symbolic scripts (for example paper/HN-model/quasi-1D-beta.py).
+# sympy==1.10.1
+# phcpy==1.1.4
+
+# BerryPy (needed by every script that imports paper/HN-model/HN_model_common.py)
+# is not distributed on PyPI and cannot be pip-installed: its setup.py is a plain
+# script (it never calls setuptools.setup()) that probes the optional packages,
+# writes BerryPy/flags.py and copies the package into the user site-packages.
+# Clone the repository, enter it, and run the script from there:
+#   git clone https://github.com/Chenyang-Wang-1999/BerryPy.git
+#   cd BerryPy
+#   python setup.py            # add --without-binary to skip the optional binary

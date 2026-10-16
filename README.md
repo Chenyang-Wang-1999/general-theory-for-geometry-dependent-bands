@@ -25,6 +25,150 @@ For example, the folder `<dataset>/puncture-calculation/data` contains the data 
 To use the data, download and unzip `general-theory-geometry-dependent-bands-data.zip`, copy all contents of the unzipped folder except for README, and paste them at the root of this repo.
 
 
+## Data format and runtime environment
+
+All numerical data are Python pickle files (`*.pkl`), 260 files and 8.4 GB in total.
+They store only Python built-in types (`dict`, `tuple`, `list`, `int`, `float`,
+`complex`, `bool`) and `numpy.ndarray` objects, so no class defined by this
+repository is needed to read them back.
+
+### What is needed to unpickle the data
+
+Every file uses **pickle protocol 4**, which is readable by Python >= 3.4.
+The globals referenced by the pickles were extracted from all 260 files without
+loading them, with `python tools/check-pickle-deps.py` (which also saves the
+report to `tools/pickle-dep-report.json`):
+
+| data folder | files | size | library needed to unpickle |
+|---|---:|---:|---|
+| `Amoeba-calculation/data` | 3 | 30 MB | NumPy |
+| `ChP-winding-algorithm/data` | 21 | 0.1 MB | NumPy |
+| `long-range-coupling/data` | 30 | 8.4 MB | NumPy |
+| `paper/HN-model/data` | 1 | 100 MB | NumPy |
+| `paper/schematic-GDSE/data` | 2 | 2.2 MB | NumPy |
+| `phcpy-free-algorithm/data` | 10 | 6.3 MB | NumPy; **SymPy** for `Haldane-gain-loss-amoeba-0.pkl` |
+| `puncture-calculation/data` | 193 | 8.25 GB | NumPy |
+| **total** | **260** | **8.4 GB** | |
+
+The complete set of globals recorded in the data is
+`numpy.core.multiarray._reconstruct`, `numpy.core.multiarray.scalar`,
+`numpy.ndarray`, `numpy.dtype` (NumPy), `builtins.complex` (a Python built-in) and
+`sympy.core.numbers.Float`. In particular **no SciPy, pandas, PyTorch or
+Matplotlib object is stored**, and only one file needs SymPy: the working file
+`phcpy-free-algorithm/data/Haldane-gain-loss-amoeba-0.pkl`, which is written and
+read only by `phcpy-free-algorithm/Haldane-model-gainloss.py` and is not read by
+any script in `paper/`. **SymPy is therefore not required to reproduce the
+figures.**
+
+### NumPy version
+
+All 260 files carry the **NumPy 1.x** pickle layout: they reference
+`numpy.core.multiarray.*`, and none of them references `numpy._core.multiarray`
+(the layout written by NumPy >= 2.0). A pickle does not record the NumPy release
+that produced it, but the environment this code and data were archived with is
+
+| package | version |
+|---|---|
+| Python | 3.9.16 |
+| NumPy | **1.23.5** |
+
+and a pickle written by NumPy 1.23.5 has exactly the layout found in the data
+files. Please use NumPy 1.23.5 (or another 1.x release) when reading or rewriting
+the data. Note that the rename of the private module in NumPy 2.0
+(`numpy.core` -> `numpy._core`) makes the layouts one-directional: `numpy.core`
+is still importable in NumPy 2.x as a deprecated compatibility alias, so NumPy
+2.x can read these files, but data re-saved with NumPy 2.x can no longer be read
+by NumPy 1.x. Do not re-save the published data with NumPy 2.x if the files have
+to remain readable by NumPy 1.x.
+
+### matplotlib version and backend
+
+The figures were drawn with **matplotlib 3.8.0**. The committed output files
+state the release that produced them:
+
+* 105 of the 116 PNG files under `paper/` carry
+  `Software: Matplotlib version3.8.0` in their PNG metadata and the remaining 11
+  carry `Matplotlib version3.6.1`.
+* Of the 112 PDF files under `paper/` (excluding the assembled manuscripts in
+  `paper/manu-and-supp`), 37 report
+  `Producer (Matplotlib pdf backend v3.8.0)`, 4 report `v3.7.2` and 71 report
+  `v3.6.1`. The `v3.6.1` and `v3.7.2` files all live in
+  `paper/HN-model/Figures` and `paper/winding-number/Figures` and were carried
+  over from earlier runs; they differ from a 3.8.0 re-run only in sub-pixel
+  details, so exact byte-for-byte reproduction of those panels would need the
+  older release.
+
+Backend: every figure is written by `Figure.savefig`, i.e. the `.pdf` output uses
+the Matplotlib PDF backend and the `.png` output uses the PNG (Agg) writer, so
+the interactive backend does not influence the saved files. All scripts can
+therefore run headless; if no display is available, set `MPLBACKEND=Agg`, in
+which case the `plt.show()` calls in the `__main__` blocks become no-ops. Two
+scripts select a backend explicitly:
+`paper/settings-and-materials/plot-latex-formula.py` and
+`paper/HN-model/Amoeba-related-plot.py` call `matplotlib.use("pdf")`.
+
+The style file shared by the plotting scripts,
+`paper/settings-and-materials/paper_plot.mplstyle`, requests **Arial**
+(`font.sans-serif`) and **Times New Roman** (`font.serif`). These are the
+Microsoft core fonts; if they are missing, Matplotlib silently falls back to
+DejaVu Sans and every label in the figures changes. Install them (for example
+`ttf-mscorefonts-installer` on Debian/Ubuntu) before regenerating the figures.
+
+### Python packages needed to reproduce the figures
+
+Only the scripts in `paper/` are needed to rebuild the figures from the published
+data. They are all covered by `requirements.txt` in the root of this repository:
+
+```bash
+python -m pip install -r requirements.txt
+
+# BerryPy is not a pip package: it ships its own setup.py, which has to be run
+# from inside a clone of the repository (it installs into the user site-packages).
+git clone https://github.com/Chenyang-Wang-1999/BerryPy.git
+cd BerryPy
+python setup.py          # add --without-binary to skip the optional binary
+cd ..
+```
+
+| package | version in the archived environment | needed by |
+|---|---|---|
+| NumPy | 1.23.5 | every script |
+| SciPy | 1.13.0 | `HN_model_common.py`, `quasi-1D-spectrum.py`, `BZ_spectrum.py` |
+| Matplotlib | 3.8.0 | every plotting script |
+| SymPy | 1.10.1 (optional) | only BerryPy's symbolic routines (`get_GBZ`, `get_characteristic_polynomial_data`), which no figure script calls |
+| PHCpy | 1.1.4 (optional) | only BerryPy's `get_GBZ`, which no figure script calls |
+| BerryPy | 3.12 develop (as reported by the installed package) | `HN_model_common.py` (imported by most `paper/HN-model` scripts) and `paper/schematic-GDSE/plot-schematic-GDSE.py` |
+| shapely | 2.0.4 | only `OBC-spectrum.py::plot_11_OBC_spectrum_marked_SGBZ`, which is not called by default |
+
+BerryPy is not distributed on PyPI and **cannot be installed with pip**: its
+`setup.py` is a plain script that never calls `setuptools.setup()`. Run from
+inside a clone of <https://github.com/Chenyang-Wang-1999/BerryPy.git>, it probes
+for the optional packages, writes `BerryPy/flags.py` from the result, and copies
+the package into the user site-packages. BerryPy treats SymPy and
+PHCpy as **optional**: the routines that need them raise
+`ModuleNotFoundError` when they are missing (`get_GBZ` needs both, while
+`get_characteristic_polynomial_data` needs SymPy). The `paper/` figure scripts
+only use `TightBindingModel`, `get_supercell` and `truncate`, so SymPy and PHCpy
+are **not** needed to reproduce the figures. Both are installed in the archived
+environment, and they become necessary only for the auxiliary symbolic scripts
+such as `paper/HN-model/quasi-1D-beta.py`.
+
+**No compiled extension is needed to reproduce the figures.** The C++ modules
+(`_poly_tools_cc`, `lib_GBZ_manifold`) and the PHCpy solver are only used by the
+numerical-calculation scripts and by the auxiliary routines
+`get_GBZ_candidates()`, `plot_GBZ_candidates()` and `plot_total_winding_11()` of
+`paper/HN-model/GBZ-candidates.py`. That file imports them lazily, so the figure
+it produces, `Figures/DGBZ-spectrum-11-direction.pdf`, is drawn from the analytic
+`[11]`-SGBZ and runs with the packages listed above alone. To run those
+solver-based routines as well, build `submodules/poly_tools/pybind` and
+`submodules/GBZ-manifold` with `make` (they need `g++`, the Eigen3 headers in
+`/usr/include/eigen3`, Pybind11 and the Python development headers) and place the
+resulting `_poly_tools_cc*.so` / `lib_GBZ_manifold*.so` next to the vendored
+`poly_tools` / `GBZ_manifold` packages under `puncture-calculation/`, which is
+where those scripts import them from.
+
+Following sections describe the figures in the main text and the supplementary information, respectively.
+
 ## Main text
 
 ### Figure 1: Illustration of geometry-dependent non-Hermitian bands
@@ -84,6 +228,12 @@ flowchart TB
 ```
 
 \* "DGBZ" is a deprecated name for "SGBZ"
+
+`paper/HN-model/GBZ-candidates.py` draws `DGBZ-spectrum-11-direction.pdf`
+directly when it is run; the `[11]`-SGBZ it plots is analytic, so no data file
+and no compiled extension is involved. The remaining routines in that file
+(`get_GBZ_candidates`, `plot_GBZ_candidates`, `plot_total_winding_11`) do use the
+punctured-GBZ solver and are commented out in its `__main__`.
 
 ### Figure 4: Criterion for uniform or geometry-dependent bands
 

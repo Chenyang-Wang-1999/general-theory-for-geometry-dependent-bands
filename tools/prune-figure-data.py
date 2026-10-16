@@ -71,6 +71,18 @@ def trim_long_range_obc(obj):
     return (params, coord_list, eigv, None)
 
 
+def trim_eigv_eigvec(obj):
+    '''``(eigv, eigvec)`` -> keep the eigenvalues, drop the eigenvector matrix.
+
+    ``paper/HN-model/BZ_spectrum.py::plot_OBC_spectrum`` loads the pair as
+    ``eigv, _`` and never touches the eigenvector matrix, which is essentially
+    the whole 100 MB of the file.
+    '''
+    if not isinstance(obj, tuple) or len(obj) != 2:
+        return None
+    return (obj[0], None)
+
+
 def trim_basis_beta(obj, n_keep):
     '''Keep only the non-Bloch basis vectors and coefficients actually used.'''
     if not isinstance(obj, tuple) or len(obj) < 4:
@@ -99,6 +111,16 @@ def build_manifest(src):
         return [os.path.relpath(h, src) for h in hits]
 
     items = []
+
+    # ---- S3: W vs W_q1D in the 2D HN and non-Hermitian Haldane models --
+    # ``paper/winding-number/W-and-W-strip.py`` reads these through its
+    # ``main_plot`` / ``print_info`` helpers.  The committed ``__main__`` prints the
+    # nH-Haldane family; the 2D-HN family is the alternative used for the other
+    # panel.  Both families are tiny, so both are shipped.
+    for p in g('ChP-winding-algorithm/data', '2D-HN-test-*.pkl'):
+        items.append((p, None, 'S3 b'))
+    for p in g('ChP-winding-algorithm/data', 'nH-Haldane-test-*.pkl'):
+        items.append((p, None, 'S3 d'))
 
     # ---- S8: QMGBZ of the three strips --------------------------------
     for d in ['x', 'y', '11']:
@@ -140,6 +162,13 @@ def build_manifest(src):
                       None, 'S11 a-e / main-text Fig. 3 (full matrix required)'))
     items.append(('puncture-calculation/data/paper-HN-OBC-2-aspect_0.125000-N_40.pkl',
                   None, 'S11 a-e / main-text Fig. 3 (full matrix required)'))
+    # ``OBC-spectrum.py`` also plots the aspect-1 and aspect-8 strips, which are the
+    # remaining panels of main-text Fig. 3e,f.  Its plotting routines unpack
+    # ``eigv, eigvec, point_vec, params, shape`` but only ever use ``eigv``, so the
+    # eigenvector matrices can be dropped.
+    for aspect in ['1.000000', '8.000000']:
+        items.append(('puncture-calculation/data/paper-HN-OBC-2-aspect_%s-N_40.pkl' % aspect,
+                      trim_obc_spectrum, 'main-text Fig. 3 e,f'))
 
     # ---- S11: non-Bloch decomposition of one eigenstate ---------------
     for n2 in [30, 40, 50]:
@@ -147,7 +176,8 @@ def build_manifest(src):
                       lambda o: trim_basis_beta(o, 4), 'S11 a-e'))
 
     # ---- S12: gain-loss Haldane model ---------------------------------
-    for which in ['a1', 'a2']:
+    # ``plot-spectrum.py`` is run with ``which`` in a1, a2, x and y.
+    for which in ['a1', 'a2', 'x', 'y']:
         items.append(('phcpy-free-algorithm/data/Haldane-gain-loss-%s-SGBZ-0.pkl' % which,
                       None, 'S12 b,c'))
     for name in ['paper-Haldane-gain-loss-OBC-80-80.pkl',
@@ -178,6 +208,12 @@ def build_manifest(src):
         items.append((p, None, 'S19'))
     for p in g('puncture-calculation/data', 'paper-non-Bloch-sol-E_*.pkl'):
         items.append((p, None, 'S20 (plot_non_Bloch_sols)'))
+
+    # ---- S23: spectral area of BZ bands --------------------------------
+    # ``BZ_spectrum.py`` can recompute this file, but shipping it lets the reader
+    # draw the OBC spectrum of panel c without diagonalising a 2500x2500 matrix.
+    items.append(('paper/HN-model/data/OBC_eigenenergy_no_phase.pkl',
+                  trim_eigv_eigvec, 'S23 c'))
 
     return items
 
