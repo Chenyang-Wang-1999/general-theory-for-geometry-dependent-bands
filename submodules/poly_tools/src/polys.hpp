@@ -1362,7 +1362,7 @@ private:
 
 };
 
-class Laurant
+class Laurent
 {
 public:
     IndexType dim;
@@ -1371,15 +1371,15 @@ public:
     IndexVec num_max_orders;
     IndexVec denom_orders;
 
-    Laurant(IndexType dim):dim(dim), num(dim){
+    Laurent(IndexType dim):dim(dim), num(dim){
         num_max_orders.assign(dim, 0);
         denom_orders.assign(dim, 0);
     }
 
-    Laurant(Laurant& laurant_another):dim(laurant_another.dim), num(laurant_another.dim), 
-        num_max_orders(laurant_another.num_max_orders), denom_orders(laurant_another.denom_orders)
+    Laurent(Laurent& Laurent_another):dim(Laurent_another.dim), num(Laurent_another.dim), 
+        num_max_orders(Laurent_another.num_max_orders), denom_orders(Laurent_another.denom_orders)
     {
-        laurant_another.num.copy_to(num);
+        Laurent_another.num.copy_to(num);
     }
 
     void reinit()
@@ -1391,7 +1391,7 @@ public:
     
     void reduction()
     {
-        // conduct reduction of the Laurant polynomial
+        // conduct reduction of the Laurent polynomial
         IndexVec num_min_orders;
         
         num.get_min_order(num_max_orders, num_min_orders);
@@ -1421,7 +1421,7 @@ public:
         );
     }
 
-    void set_Laurant(PolyLinkedList & num, Monomial & denom)
+    void set_Laurent(PolyLinkedList & num, Monomial & denom)
     {
         assert(num.dim == dim);
         assert(denom.dim == dim);
@@ -1435,7 +1435,7 @@ public:
         reduction();
     }
 
-    void set_Laurant_by_terms(ScalarVec coeffs, std::vector<int> orders)
+    void set_Laurent_by_terms(ScalarVec coeffs, std::vector<int> orders)
     {
         // assertion
         assert(coeffs.size() * dim == orders.size());
@@ -1482,21 +1482,37 @@ public:
         return val;
     }
 
+    VarScalar eval_diff(IndexVec diff_order, VarScalarVec x_arr)
+    {
+        STDERR << "Warning: unsafe!\n";
+        // num term
+        VarScalar val_diff = num.eval_diff(diff_order, x_arr), val = num.eval(x_arr);
+
+        // denom
+        Monomial denom_mono(1.0, denom_orders);
+        PolyLinkedList denom_poly(this->dim);
+        denom_poly.add_term(denom_mono);
+        VarScalar denom_val = denom_poly.eval(x_arr), denom_diff = denom_poly.eval_diff(diff_order, x_arr);
+
+        return val_diff/denom_val - val * denom_diff/(pow(denom_val, 2));
+
+    }
+
     /* 
         f(x1, x2, ..., xi, ..., xn) -> g(x) = f(x1, x2, ..., 1/xi, ..., xn) 
     */
-    void flip_variable(IndexType var_id, Laurant & new_laurant)
+    void flip_variable(IndexType var_id, Laurent & new_Laurent)
     {
         PolyTerm * curr_ptr = num.term_tree;
-        new_laurant.denom_orders.assign(denom_orders.begin(), denom_orders.end());
+        new_Laurent.denom_orders.assign(denom_orders.begin(), denom_orders.end());
         bool larger_denom = (denom_orders[var_id] > num_max_orders[var_id]);
         if(larger_denom)
         {
-            new_laurant.denom_orders[var_id] = 0;
+            new_Laurent.denom_orders[var_id] = 0;
         }
         else
         {
-            new_laurant.denom_orders[var_id] = num_max_orders[var_id] - denom_orders[var_id];
+            new_Laurent.denom_orders[var_id] = num_max_orders[var_id] - denom_orders[var_id];
         }
         while(curr_ptr != NULL)
         {
@@ -1511,12 +1527,120 @@ public:
                 new_term.var_order(var_id) = num_max_orders[var_id] - curr_ptr->var_order(var_id);
             }
             
-            new_laurant.num.add_term(new_term);
+            new_Laurent.num.add_term(new_term);
             curr_ptr = curr_ptr -> next;
         }
-        new_laurant.num.get_max_order(new_laurant.num_max_orders);
-        new_laurant.reduction();
+        new_Laurent.num.get_max_order(new_Laurent.num_max_orders);
+        new_Laurent.reduction();
     }
+
+    void derivative(IndexType var_id, Laurent & new_laurent)
+    {
+        // new_laurent = g' * xk / (h * xk) - (mk * g)/(h * xk)
+        IndexVec new_denom_degrees = this->denom_orders;
+        new_denom_degrees[var_id] ++;
+
+        // mk * g term
+        PolyLinkedList new_g(this->dim), new_g_prime(this->dim);
+        this->num.scalar_mul(this->denom_orders[var_id], new_g);
+
+        // g' * xk term
+        this->num.derivative(var_id, new_g_prime);
+        IndexVec xk_degrees(this->dim);
+        xk_degrees[var_id] = 1;
+        Monomial xk(1.0, xk_degrees);
+        new_g_prime.monomial_mul_self(xk);
+
+        // calculate numerator
+        new_g_prime.destructive_subs_self(new_g);
+        Monomial new_denom(1.0, new_denom_degrees);
+        new_laurent.set_Laurent(new_g_prime, new_denom);
+    }
+
+    void partial_eval(VarScalarVec & var_vals, IndexVec & eval_id_list, IndexVec & new_dof_map, Laurent & new_Laurent)
+    {
+        // partial evaluation
+        PolyLinkedList new_num(this->dim);
+        this->num.partial_eval(var_vals, eval_id_list, new_dof_map, &new_num);
+        Monomial new_denom = Monomial(1.0, this->denom_orders).partial_eval(var_vals, eval_id_list, new_dof_map);
+
+        new_Laurent.set_Laurent(new_num, new_denom);
+    }
+
+    std::string to_str(const std::vector<std::string> & var_name_list)
+    {
+        std::ostringstream poly_string;
+        poly_string << std::setprecision(18);
+
+        PolyTerm * curr_ptr = num.term_tree;
+        while(curr_ptr != NULL)
+        {
+            // 1. coefficient
+            #if SCALAR_MODE == 0
+                // complex coefficients
+                poly_string << '+' << '(' << curr_ptr->coeff.real();
+                if(curr_ptr->coeff.imag() >=0)
+                {
+                    poly_string << '+' << abs(curr_ptr->coeff.imag()) << "*i)";
+                }
+                else
+                {
+                    poly_string << '-' << abs(curr_ptr->coeff.imag()) << "*i)";
+                }
+            #else
+                // real coefficients
+                poly_string << '+' << '(' << curr_ptr->coeff << ')';
+            #endif
+
+            // 2. variables
+            for(IndexType curr_var = 0; curr_var < dim; curr_var++)
+            {
+                int curr_deg = curr_ptr -> var_order(curr_var);
+                curr_deg -= denom_orders[curr_var];
+                if(curr_deg > 1)
+                {
+                    poly_string << "*(" << var_name_list[curr_var] <<"**" << curr_deg <<')';
+                }
+                else if(curr_deg == 1)
+                {
+                    poly_string << "*" << var_name_list[curr_var];
+                }
+                else if(curr_deg < 0)
+                {
+                    poly_string << "*(" << var_name_list[curr_var] << "**(" << curr_deg << ')' <<')';
+                }
+            }
+            curr_ptr = curr_ptr->next;
+        }
+        poly_string << ';';
+        return poly_string.str();
+    }
+
+    void copy_to(Laurent & new_Laurent)
+    {
+        new_Laurent.reinit();
+        new_Laurent.dim = dim;
+        this->num.copy_to(new_Laurent.num);
+        new_Laurent.denom_orders = denom_orders;
+        new_Laurent.num_max_orders = num_max_orders;
+    }
+
+    void scale_var(ScalarVec k, Laurent & new_Laurent)
+    {
+        this->copy_to(new_Laurent);
+        new_Laurent.num.scale_var_self(k);
+        Scalar denom_scale = 1.0;
+        for (IndexType var_id = 0; var_id < dim; var_id ++)
+        {
+            if(denom_orders[var_id] > 0)
+            {
+                denom_scale *= pow(k[var_id], denom_orders[var_id]);
+            }
+        }
+
+        new_Laurent.num.scalar_mul_self(1.0/denom_scale);
+    }
+
 };
 
 /* Homogeneous polymial*/

@@ -1,5 +1,6 @@
 PYTHONARCH=python3
 INCLUDE+=$(shell $(PYTHONARCH)-config --includes)
+INCLUDE+=$(shell pybind11-config --includes)
 INCLUDE+=-I/usr/include/eigen3 # Eigen3 directory
 SUFFIX=$(shell $(PYTHONARCH)-config --extension-suffix)
 
