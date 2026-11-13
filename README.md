@@ -7,7 +7,8 @@ The LaTeX source of the main text and SI is archived in `paper/manu-and-supp`. T
 1. Run the full numerical calculation scripts listed below. Note that some scripts depend on packages implemented in this repo. 
    You can find them in the folder where the script is located, or in the folder `submodules`.
    There are also C++ source files in some folders. Pybind11 is required to build them.
-2. Use numerical data files published on ScienceDB [cstr.cn/31253.11.sciencedb.015c0](https://cstr.cn/31253.11.sciencedb.015c0) and run plotting scripts.
+2. Use numerical data files (pickle format) published on ScienceDB [cstr.cn/31253.11.sciencedb.015c0](https://cstr.cn/31253.11.sciencedb.015c0) *version 1*, and run plotting scripts.
+3. Use the CSV files generated along with the figures in the `paper` folder, which are published on the ScienceDB dataset as *version 2*.
 
 All the scripts should be executed at its directory.
 For example, to run "paper/schematic-GDSE/plot-schematic-GDSE.py":
@@ -22,17 +23,15 @@ The folder tree in the dataset is the same as the current repo.
 For example, the folder `<dataset>/puncture-calculation/data` contains the data that should be placed in `puncture-calculation/data` folder in this repo.
 
 
-To use the data, download and unzip `general-theory-geometry-dependent-bands-data.zip`, copy all contents of the unzipped folder except for README, and paste them at the root of this repo.
-
-
 ## Data format and runtime environment
+
+### Version 1
+To use the data, download and unzip `general-theory-geometry-dependent-bands-data.zip`, copy all contents of the unzipped folder except for README, and paste them at the root of this repo.
 
 All numerical data are Python pickle files (`*.pkl`), 260 files and 8.4 GB in total.
 They store only Python built-in types (`dict`, `tuple`, `list`, `int`, `float`,
 `complex`, `bool`) and `numpy.ndarray` objects, so no class defined by this
 repository is needed to read them back.
-
-### What is needed to unpickle the data
 
 Every file uses **pickle protocol 4**, which is readable by Python >= 3.4.
 The globals referenced by the pickles were extracted from all 260 files without
@@ -60,9 +59,14 @@ read only by `phcpy-free-algorithm/Haldane-model-gainloss.py` and is not read by
 any script in `paper/`. **SymPy is therefore not required to reproduce the
 figures.**
 
+### Version 2
+All data are pure text in CSV format. The dataset contains a plotting script to reproduce the figures.
+See `data-export/README.md` for more details.
+
+
 ### NumPy version
 
-All 260 files carry the **NumPy 1.x** pickle layout: they reference
+For pickle version, all 260 files carry the **NumPy 1.x** pickle layout: they reference
 `numpy.core.multiarray.*`, and none of them references `numpy._core.multiarray`
 (the layout written by NumPy >= 2.0). A pickle does not record the NumPy release
 that produced it, but the environment this code and data were archived with is
@@ -139,6 +143,7 @@ cd ..
 | PHCpy | 1.1.4 (optional) | only BerryPy's `get_GBZ`, which no figure script calls |
 | BerryPy | 3.12 develop (as reported by the installed package) | `HN_model_common.py` (imported by most `paper/HN-model` scripts) and `paper/schematic-GDSE/plot-schematic-GDSE.py` |
 | shapely | 2.0.4 | only `OBC-spectrum.py::plot_11_OBC_spectrum_marked_SGBZ`, which is not called by default |
+| pygbz2d | 0.1.0 | numerical SGBZ calculations (gain-loss Haldane model) |
 
 BerryPy is not distributed on PyPI and **cannot be installed with pip**: its
 `setup.py` is a plain script that never calls `setuptools.setup()`. Run from
@@ -152,6 +157,8 @@ only use `TightBindingModel`, `get_supercell` and `truncate`, so SymPy and PHCpy
 are **not** needed to reproduce the figures. Both are installed in the archived
 environment, and they become necessary only for the auxiliary symbolic scripts
 such as `paper/HN-model/quasi-1D-beta.py`.
+
+`pygbz2d` **cannot be installed with pip**, either. To install, clone from <https://github.com/Chenyang-Wang-1999/pyGBZ2d.git> and run `pip install .` at the project folder of `pyGBZ2d`.
 
 **No compiled extension is needed to reproduce the figures.** The C++ modules
 (`_poly_tools_cc`, `lib_GBZ_manifold`) and the PHCpy solver are only used by the
