@@ -1,7 +1,7 @@
 '''
 author:        wangchenyang <cy-wang21@mails.tsinghua.edu.cn>
 date:          2022-12-22
-Copyright © Department of Physics, Tsinghua University.  All rights reserved
+Copyright © Department of Physics, Tsinghua University. All rights reserved
 '''
 
 MODE = 'cc'
@@ -41,7 +41,7 @@ class CStrVec(c_poly_tools.CStrVec):
     def __init__(self, vec):
         super().__init__(vec)
 
-class CLaurantIndexVec(c_poly_tools.CLaurantIndexVec):
+class CLaurentIndexVec(c_poly_tools.CLaurentIndexVec):
     def __init__(self, vec):
         super().__init__(vec)
 
@@ -236,7 +236,7 @@ class CSeriesVec(c_poly_tools._CSeriesVec):
         super().get_poly(val_id, curr_order, poly)
         return poly
 
-class CLaurant(c_poly_tools._CLaurant):
+class CLaurent(c_poly_tools._CLaurent):
     dim: int 
     num: CPolyLinkedList
     num_max_orders: CIndexVec
@@ -251,19 +251,37 @@ class CLaurant(c_poly_tools._CLaurant):
     def reduction(self):
         super().reduction()
 
-    def set_Laurant(self, num:CPolyLinkedList, denom:CMonomial):
-        super().set_Laurant(num, denom)
+    def set_Laurent(self, num:CPolyLinkedList, denom:CMonomial):
+        super().set_Laurent(num, denom)
     
-    def set_Laurant_by_terms(self, coeffs:CScalarVec , orders:CLaurantIndexVec):
-        super().set_Laurant_by_terms(coeffs, orders)
+    def set_Laurent_by_terms(self, coeffs:CScalarVec , orders:CLaurentIndexVec):
+        super().set_Laurent_by_terms(coeffs, orders)
     
     def eval(self, x_arr:CVarScalarVec):
         return super().eval(x_arr)
 
     def flip_variable(self, var_id:int):
-        new_laurant = CLaurant(self.dim)
-        super().flip_variable(var_id, new_laurant)
-        return new_laurant
+        new_Laurent = CLaurent(self.dim)
+        super().flip_variable(var_id, new_Laurent)
+        return new_Laurent
+    
+    def derivative(self, var_id:int):
+        new_Laurent = CLaurent(self.dim)
+        super().derivative(var_id, new_Laurent)
+        return new_Laurent
+    
+    def partial_eval(self, var_vals:CVarScalarVec, eval_id_list:CIndexVec, new_dof_map:CIndexVec):
+        new_Laurent = CLaurent(self.dim - len(var_vals))
+        super().partial_eval(var_vals, eval_id_list, new_dof_map, new_Laurent)
+        return new_Laurent
+
+    def to_str(self, varname_list:CStrVec):
+        return super().to_str(varname_list)
+
+    def scale_var(self, k:CScalarVec):
+        new_laurent = CLaurent(self.dim)
+        super().scale_var(k,new_laurent)
+        return new_laurent
 
 def poly_load_from_file(fname):
     data = spio.loadmat(fname)
