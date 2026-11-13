@@ -11,8 +11,7 @@ import matplotlib.pyplot as plt
 import pickle
 from scipy import linalg as la
 from cmath import sin, cos, sqrt, pi, exp, log
-import brute_force_solver as bfs
-import brute_force_amoeba as bfa
+import gbz_solver as gbz
 import multiprocessing as mp
 import mpmath
 import io
@@ -324,7 +323,7 @@ def sweep_amoeba():
     E_list = E_mesh.flatten()
 
     pool = mp.Pool(mp.cpu_count())
-    results = pool.starmap(bfa.check_amoeba, [(coeffs, degs, E, j / len(E_list)) for j, E in enumerate(E_list)])
+    results = pool.starmap(gbz.check_amoeba, [(coeffs, degs, E, j / len(E_list)) for j, E in enumerate(E_list)])
     pool.close()
     pool.join()
 
@@ -354,7 +353,7 @@ def sweep_SGBZ_x():
     E_list = E_mesh.flatten()
 
     pool = mp.Pool(mp.cpu_count())
-    results = pool.starmap(bfs.check_SGBZ, [(coeffs, degs, E, j / len(E_list)) for j, E in enumerate(E_list)])
+    results = pool.starmap(gbz.check_SGBZ, [(coeffs, degs, E, j / len(E_list)) for j, E in enumerate(E_list)])
     pool.close()
     pool.join()
 
@@ -385,7 +384,7 @@ def sweep_SGBZ_y():
     E_list = E_mesh.flatten()
 
     pool = mp.Pool(mp.cpu_count())
-    results = pool.starmap(bfs.check_SGBZ, [(coeffs, degs, E, j / len(E_list)) for j, E in enumerate(E_list)])
+    results = pool.starmap(gbz.check_SGBZ, [(coeffs, degs, E, j / len(E_list)) for j, E in enumerate(E_list)])
     pool.close()
     pool.join()
 
@@ -427,7 +426,7 @@ def plot_SGBZ(fname_suffix: str = "x"):
     # else:
     #     coeffs, degs = data["coeffs"], data["degs"]
 
-    # E_k_list = bfs.convert_results_to_triplet(results, E_list, coeffs, degs)
+    # E_k_list = gbz.results_to_momenta(results, E_list)
     # E_k_list = np.array(E_k_list)
     # plt.plot(E_k_list[:,0].real, E_k_list[:,1].imag, ".")
     # plt.plot(E_k_list[:,0].real, E_k_list[:,2].imag, ".")
@@ -467,13 +466,17 @@ def plot_zero_distribution(fname_suffix: str = "x"):
             plt.title(f"E = {E_list[sol_ind]}")
             for point in res["PMGBZ_points"]:
                 theta1 = point["theta1"]
-                print(point["beta2_sols"])
-                beta2_arr_p = point["beta2_sols"][0]
-                beta2_arr_n = point["beta2_sols"][1]
-                beta2_arr_0 = point["beta2_sols"][2]
-                plt.plot(theta1 * np.ones(len(beta2_arr_p)), np.angle(beta2_arr_p), 'r+')
-                plt.plot(theta1 * np.ones(len(beta2_arr_n)), np.angle(beta2_arr_n), 'bx')
-                plt.plot(theta1 * np.ones(len(beta2_arr_0)), np.angle(beta2_arr_0), 'ko')
+                if "beta2" in point:                     # record of gbz_solver
+                    plt.plot(theta1, np.angle(point["beta2"]), 'r+')
+                elif "beta2_sols" in point:              # older record
+                    for beta2_arr, marker in zip(point["beta2_sols"],
+                                                 ('r+', 'bx', 'ko')):
+                        plt.plot(theta1 * np.ones(len(beta2_arr)),
+                                 np.angle(beta2_arr), marker)
+                else:                                    # older record
+                    for pair in point["beta2_pairs"]:
+                        for beta2 in pair:
+                            plt.plot(theta1, np.angle(beta2), 'r+')
             plt.show()
 
 
@@ -509,7 +512,7 @@ def _binary_search_amoeba_boundary_point(
             break
         E_mid = (E_inside + E_outside) / 2
         with contextlib.redirect_stdout(io.StringIO()):
-            res = bfa.check_amoeba(coeffs, degs, E_mid, 0)
+            res = gbz.check_amoeba(coeffs, degs, E_mid, 0)
         if not res["success"]:
             print("Warning: solver failed!")
             break
@@ -536,7 +539,7 @@ def _radial_binary_search(
 
     def _is_inside(E: complex) -> bool:
         with contextlib.redirect_stdout(io.StringIO()):
-            res = bfa.check_amoeba(coeffs, degs, E, 0)
+            res = gbz.check_amoeba(coeffs, degs, E, 0)
         if not res["success"]:
             print(f"Warning: solver failed at E = {E}")
         return res["success"] and res["is_amoeba"]
@@ -600,7 +603,7 @@ def refine_amoeba_corner(
     # Verify E0 and -E0 are inside amoeba
     def _is_inside(E: complex) -> bool:
         with contextlib.redirect_stdout(io.StringIO()):
-            res = bfa.check_amoeba(coeffs, degs, E, 0)
+            res = gbz.check_amoeba(coeffs, degs, E, 0)
         return res["success"] and res["is_amoeba"]
 
     if not _is_inside(E0):

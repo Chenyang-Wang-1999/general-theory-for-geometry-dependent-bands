@@ -1,5 +1,5 @@
 '''
-author:        wangchenyang <cy-wang21@mails.tsinghua.edu.cn>
+author:        Wang Chenyang <cy-wang21@mails.tsinghua.edu.cn>
 date:          2026-01-15
 Copyright © Department of Physics, Tsinghua University. All rights reserved
 '''
@@ -10,10 +10,8 @@ from cmath import exp, log
 import numpy as np
 from BerryPy import TightBinding as tb
 import matplotlib.pyplot as plt
-import poly_tools as pt
-import brute_force_solver as bfs
-import brute_force_amoeba as bfa
 import pickle
+import gbz_solver as gbz
 from scipy import linalg as la
 from typing import Literal
 import multiprocessing as mp
@@ -81,25 +79,6 @@ def non_Hermitian_Haldane_H(u1, u2, v1, v2, phi, M):
 def Haldane_non_Hermitian_phase(t1, t2, phi, M, gamma):
     # v1 = v2 = t2 * exp(i gamma)
     return non_Hermitian_Haldane_H(t1, t1, t2 * exp(1j * gamma), t2 * exp(1j * gamma), phi, M)
-
-def calculate_Haldane_SGBZ():
-    t1, t2, phi, M, gamma = ALL_PARAMS
-
-    model = Haldane_non_Hermitian_phase(t1, t2, phi, M, gamma)
-    coeffs, degs = model.get_characteristic_polynomial_data()
-    char_poly = csolver.CLaurent(3)
-    char_poly.set_Laurent_by_terms(
-        csolver.CScalarVec(coeffs),
-        csolver.CLaurentIndexVec(degs.flatten())
-    )
-    gbz.sweep_2D_GBZ_x_major(
-        "data/paper-Haldane-gain-loss-a1",
-        char_poly,
-        np.linspace(np.pi / 51, np.pi * (1 - 1 / 51), 50),
-        np.linspace(np.pi / 51, np.pi * (1 - 1 / 51), 50),
-        0,
-        100
-    )
 
 def plot_BZ_bands():
     t1, t2, phi, M, gamma = ALL_PARAMS
@@ -254,30 +233,6 @@ def plot_SGBZ_bands():
             print(len(seg))
             plt.plot((seg[:,0]).real, (seg[:,0]).imag, 'b.')
 
-def check_SGBZ(
-    coeffs: np.ndarray,
-    degs: np.ndarray,
-    E_ref: complex,
-    perc: float
-):
-    print("%.2f" % (perc * 100) + r"%")
-    coeffs = pt.CScalarVec(coeffs)
-    degs = pt.CLaurentIndexVec(degs.flatten())
-    char_poly = pt.CLaurent(3)
-    char_poly.set_Laurent_by_terms(coeffs, degs)
-    solver = bfs.SGBZSolver(char_poly)
-    try:
-        mu1, PMGBZ_points = solver.solve_for_E(E_ref, N_points=301)
-        success = True
-    except Exception as e:
-        success = False
-        return {"success": success, "error": str(e)}
-
-    if PMGBZ_points:
-        return {"success": success, "is_PMGBZ": True, "mu1": mu1, "PMGBZ_points": PMGBZ_points}
-    else:
-        return {"success": success, "is_PMGBZ": False, "mu1": mu1}
-
 def sweep_amoeba():
     model = Haldane_non_Hermitian_phase(*ALL_PARAMS)
     coeffs, degs = model.get_characteristic_polynomial_data()
@@ -290,7 +245,7 @@ def sweep_amoeba():
     E_list = E_mesh.flatten()
 
     pool = mp.Pool(10)
-    results = pool.starmap(bfa.check_amoeba, [(coeffs, degs, E, j / len(E_list), True) for j, E in enumerate(E_list)])
+    results = pool.starmap(gbz.check_amoeba, [(coeffs, degs, E, j / len(E_list), True) for j, E in enumerate(E_list)])
     pool.close()
     pool.join()
 
@@ -321,7 +276,7 @@ def sweep_SGBZ_a1():
     E_list = E_mesh.flatten()
 
     pool = mp.Pool(mp.cpu_count())
-    results = pool.starmap(bfs.check_SGBZ, [(coeffs, degs, E, j / len(E_list), True) for j, E in enumerate(E_list)])
+    results = pool.starmap(gbz.check_SGBZ, [(coeffs, degs, E, j / len(E_list), True) for j, E in enumerate(E_list)])
     pool.close()
     pool.join()
 
@@ -359,7 +314,7 @@ def sweep_SGBZ_a2():
     E_list = E_mesh.flatten()
 
     pool = mp.Pool(mp.cpu_count())
-    results = pool.starmap(check_SGBZ, [(coeffs, degs, E, j / len(E_list)) for j, E in enumerate(E_list)])
+    results = pool.starmap(gbz.check_SGBZ, [(coeffs, degs, E, j / len(E_list)) for j, E in enumerate(E_list)])
     pool.close()
     pool.join()
 
@@ -397,7 +352,7 @@ def sweep_SGBZ_x():
     E_list = E_mesh.flatten()
 
     pool = mp.Pool(mp.cpu_count())
-    results = pool.starmap(check_SGBZ, [(coeffs, degs, E, j / len(E_list)) for j, E in enumerate(E_list)])
+    results = pool.starmap(gbz.check_SGBZ, [(coeffs, degs, E, j / len(E_list)) for j, E in enumerate(E_list)])
     pool.close()
     pool.join()
 
@@ -437,7 +392,7 @@ def sweep_SGBZ_y():
     E_list = E_mesh.flatten()
 
     pool = mp.Pool(mp.cpu_count())
-    results = pool.starmap(bfs.check_SGBZ, [(coeffs, degs, E, j / len(E_list)) for j, E in enumerate(E_list)])
+    results = pool.starmap(gbz.check_SGBZ, [(coeffs, degs, E, j / len(E_list)) for j, E in enumerate(E_list)])
     pool.close()
     pool.join()
 
@@ -481,7 +436,7 @@ def plot_amoebic_spectrum():
     # else:
     #     coeffs, degs = data["coeffs"], data["degs"]
 
-    # E_k_list = bfs.convert_results_to_triplet(results, E_list, coeffs, degs)
+    # E_k_list = gbz.results_to_momenta(results, E_list)
     # E_k_list = np.array(E_k_list)
     # plt.plot(E_k_list[:,0].real, E_k_list[:,1].imag, ".")
     # plt.plot(E_k_list[:,0].real, E_k_list[:,2].imag, ".")
@@ -512,7 +467,7 @@ def plot_SGBZ(which="a1"):
     # else:
     #     coeffs, degs = data["coeffs"], data["degs"]
 
-    E_k_list = bfs.convert_results_to_triplet(results, E_list, coeffs, degs)
+    E_k_list = gbz.results_to_momenta(results, E_list)
     E_k_list = np.array(E_k_list)
     plt.plot(E_k_list[:,0].real, E_k_list[:,1].imag, ".")
     plt.plot(E_k_list[:,0].real, E_k_list[:,2].imag, ".")
@@ -535,66 +490,6 @@ def plot_SGBZ_mu(which="a1"):
     E_SGBZ = np.asarray(E_SGBZ)
     sca = plt.scatter(E_SGBZ.real, E_SGBZ.imag, c=all_mu1)
     plt.colorbar(sca)
-
-def debug_SGBZ():
-    E_ref = -1.56 + 0.01j
-    model = Haldane_non_Hermitian_phase(*ALL_PARAMS)
-    coeffs, degs = model.get_characteristic_polynomial_data()
-    print(bfs.check_SGBZ(coeffs, degs, E_ref, 1))
-    char_poly = pt.CLaurent(3)
-    char_poly.set_Laurent_by_terms(
-        pt.CScalarVec(coeffs), 
-        pt.CLaurentIndexVec(degs.flatten())
-    )
-    poly_diff = bfs.PolyDiffContext(char_poly)
-    # print(bfs.get_strip_winding(poly_diff, E_ref, 0.06447462687012076))
-    # mu_list = np.linspace(-0.1, 0.1, 31)
-    # w_list = np.zeros_like(mu_list)
-    # for ind in range(len(mu_list)):
-    #     w_list[ind] = bfs.get_strip_winding(poly_diff, E_ref, mu_list[ind])[0]
-    # plt.plot(mu_list, w_list)
-    # plt.show()
-
-    for mu1 in [0.05]:
-        PMGBZ_points, theta1_arr, sols_arr, info = bfs.get_roots_and_PMGBZ(poly_diff, E_ref, mu1)
-        M = info["M"]
-        y_range = [np.min(np.log(np.abs(sols_arr))), np.max(np.log(np.abs(sols_arr)))]
-        for p in PMGBZ_points:
-            print(p)
-            if p["is_continuum"]:
-                plt.fill_betweenx(
-                    y_range, 
-                    [p["theta1_start"], p["theta1_start"]], 
-                    [p["theta1_end"], p["theta1_end"]],
-                    color=COLORS["of"])
-            else:
-                plt.plot([p["theta1"], p["theta1"]], y_range, color=COLORS["ol"])
-        plt.plot(theta1_arr, np.log(np.abs(sols_arr)), ".-", color=COLORS["bl"])
-        plt.show()
-        mu2_max_arr = np.log(np.abs(sols_arr[:, M]))
-        mu2_min_arr = np.log(np.abs(sols_arr[:, M - 1]))
-        mu2_arr = (mu2_max_arr + mu2_min_arr) / 2
-        # plt.plot(theta1_arr, mu2_arr, color=COLORS["gl"])
-        mu2_fun = interpolate.CubicSpline(theta1_arr, mu2_arr, bc_type="periodic")
-
-        plt.clf()
-        theta2_samples = np.linspace(-pi, pi, 21)
-        for p in PMGBZ_points:
-            curr_theta1 = np.log(np.exp(1j * p["theta1"])).imag
-            pos_sols, neg_sols, zero_sols = p["beta2_sols"]
-            for beta_p in pos_sols:
-                plt.plot(curr_theta1, np.log(beta_p).imag, 'r+')
-            for beta_n in neg_sols:
-                plt.plot(curr_theta1, np.log(beta_n).imag, 'bx')
-            for beta_z in zero_sols:
-                plt.plot(curr_theta1, np.log(beta_z).imag, 'ko')
-
-        for theta2 in theta2_samples:
-            plt.plot([-pi, pi], [theta2, theta2], '-')
-            w0 = bfs.get_loop_winding(poly_diff, E_ref, mu1, mu2_fun, theta2)
-            plt.text(np.random.rand() * 1.8 * pi - 0.9 * pi, theta2 + 0.1, f"{w0:.2f}")
-
-        plt.show()
 
 def plot_BZ_bands():
     model = Haldane_non_Hermitian_phase(*ALL_PARAMS)
@@ -632,7 +527,7 @@ def debug_SGBZ_calculation():
     #         E = E_real[j]
     #         print(E)
     #         break
-    print(check_SGBZ(coeffs, degs, 3.136 - 0.02j, 0))
+    print(gbz.check_SGBZ(coeffs, degs, 3.136 - 0.02j, 0))
 
    
 def plot_SGBZ_mu_major_and_minor(which="a1"):
@@ -705,7 +600,7 @@ if __name__ == "__main__":
     # plot_SGBZ_bands()
     # plt.show()
     # sweep_SGBZ_a1()
-    # sweep_SGBZ_x()
+    sweep_SGBZ_x()
     # sweep_SGBZ_a2()
     # sweep_SGBZ_y()
     # plt.figure()
@@ -746,4 +641,4 @@ if __name__ == "__main__":
     # plot_Haldane_OBC(40, 40, "-rhombus-y")
     # plt.show()
     # sweep_amoeba()
-    plot_amoebic_spectrum()
+    # plot_amoebic_spectrum()
