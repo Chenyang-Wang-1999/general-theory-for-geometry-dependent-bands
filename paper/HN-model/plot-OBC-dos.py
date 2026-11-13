@@ -8,6 +8,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pickle
 
+import sys
+sys.path.append("..")
+import figure_data as fd
+
 DATA_FOLDER = "../../puncture-calculation/data"
 CM_IN_INCH = 1 / 2.54
 
@@ -33,6 +37,14 @@ def plot_OBC_dos(n1, n2, with_axes=False):
     pcl = ax.pcolormesh(
         E_real_grid, E_imag_grid, state_count.T / E_area,
         vmin=0, vmax=n1*n2/6)
+
+    fd.save_grid(
+        "Figures/paper-HN-OBC-2-DOS-n1-%d-n2-%d" % (n1, n2),
+        E_real_grid, E_imag_grid, state_count.T / E_area,
+        "Fig. S10 | density of states of the 2D HN model with (L1, L2) = (%d, %d), "
+        "normalized per cell area; the panel's vmax is L1*L2/6" % (n1, n2),
+        x_name="Re_E", y_name="Im_E", value_name="dos",
+    )
     
     ax.xaxis.set_visible(False)
     ax.yaxis.set_visible(False)

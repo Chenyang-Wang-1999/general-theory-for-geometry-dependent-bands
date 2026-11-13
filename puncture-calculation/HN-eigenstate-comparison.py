@@ -3,7 +3,7 @@ author:        wangchenyang <cy-wang21@mails.tsinghua.edu.cn>
 date:          2024-09-10
 Copyright © Department of Physics, Tsinghua University. All rights reserved
 
-Compare eigenstates with stripe GBZ solutions
+Compare eigenstates with strip GBZ solutions
 '''
 
 import numpy as np
@@ -295,13 +295,13 @@ def compare_eigenstates(E: complex, aspect: float, N: int):
     # for beta1, beta2 in all_beta_pairs:
     #     print(abs(beta1), abs(beta2))
     #     plt.figure()
-    #     curr_stripe_state = generate_non_Bloch_states(
+    #     curr_strip_state = generate_non_Bloch_states(
     #         beta1, beta2, np.array([
     #             [1, 0],
     #             [1, 1]
     #         ]), point_vec, p0
     #     ).reshape(shape, order='F')
-    #     pcl = plt.pcolor(x_coords, y_coords, np.abs(curr_stripe_state))
+    #     pcl = plt.pcolor(x_coords, y_coords, np.abs(curr_strip_state))
     #     plt.axis('equal')
 
     # for row_ind in range(x_coords.shape[0]):
@@ -321,7 +321,7 @@ def compare_eigenstates(E: complex, aspect: float, N: int):
     # plt.savefig("Figures/temp.pdf")
 
 
-def test_stripe_GBZ_spectrum():
+def test_strip_GBZ_spectrum():
     bound, loop = HN.get_11_DGBZ_spectrum(J_X1, J_X2, J_Y1, J_Y2)
     loop = np.asarray(loop)
     plt.plot(loop.real, loop.imag)
@@ -348,14 +348,14 @@ def test_eigenstates_scale(E: complex, aspect: float, N: int):
     for beta1, beta2 in all_beta_pairs:
         print(abs(beta1), abs(beta2))
         plt.figure()
-        curr_stripe_state = generate_non_Bloch_states(
+        curr_strip_state = generate_non_Bloch_states(
             beta1, beta2, np.array([
                 [1, 0],
                 [1, 1]
             ]), point_vec, p0
         )
-        curr_stripe_state = scale_eigenstates(curr_stripe_state, point_vec, p0).reshape(shape, order='F')
-        pcl = plt.pcolor(x_coords, y_coords, np.abs(curr_stripe_state), cmap='Blues')
+        curr_strip_state = scale_eigenstates(curr_strip_state, point_vec, p0).reshape(shape, order='F')
+        pcl = plt.pcolor(x_coords, y_coords, np.abs(curr_strip_state), cmap='Blues')
         plt.axis('equal')
 
     plt.show()
@@ -388,14 +388,14 @@ def get_component(
     )
     for j, curr_beta_pair in enumerate(all_beta_pairs):
         beta1, beta2 = curr_beta_pair
-        curr_stripe_state = generate_non_Bloch_states(
+        curr_strip_state = generate_non_Bloch_states(
             beta1, beta2, np.array([
                 [1, 0],
                 [1, 1]
             ]), point_vec, p0
         )
         all_non_Bloch_waves[:, j] = scale_eigenstates(
-            curr_stripe_state, point_vec, p0
+            curr_strip_state, point_vec, p0
         )
     all_non_Bloch_waves /= 1e11
 
@@ -1806,7 +1806,7 @@ def check_fft_and_spectrum():
 if __name__ == '__main__':
     # calculate_beta_given_E(1 + 1j)
     # compare_eigenstates(1.35 + 1j, 1, 20)
-    # test_stripe_GBZ_spectrum()
+    # test_strip_GBZ_spectrum()
     # select_best_parameters()
     # test_eigenstates_scale(1.35 + 1j, 1, 20)
     # fit_eigenstate(5.10 + 1.67j, 1/8, 40)

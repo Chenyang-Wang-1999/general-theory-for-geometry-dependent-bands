@@ -8,6 +8,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 
+import sys
+sys.path.append("..")
+import figure_data as fd
+
 CM_IN_INCH = 1 / 2.54
 DATA_FOLDER = "../../phcpy-free-algorithm/data"
 
@@ -52,6 +56,14 @@ def plot_OBC_spectrum(nx, ny, which=""):
     fig.savefig(f"Figures/Haldane-OBC-spectrum-{nx}-{ny}{which}.pdf")
     plt.close(fig)
 
+    fd.save_csv(
+        f"Figures/Haldane-OBC-spectrum-{nx}-{ny}{which}",
+        ("Fig. S12(e) | rhombic geometry, " if which == "" else
+         "Fig. S12(f) | rectangular geometry, ") +
+        f"(L1, L2) = ({nx}, {ny}); Re(E), Im(E) of the OBC spectrum",
+        Re_E=eigv.real, Im_E=eigv.imag,
+    )
+
 
 def plot_SGBZ_spectrum(which="a1"):
     with open(f"{DATA_FOLDER}/Haldane-gain-loss-{which}-SGBZ-0.pkl", "rb") as fp:
@@ -87,6 +99,15 @@ def plot_SGBZ_spectrum(which="a1"):
     ax.yaxis.set_visible(True)
 
     fig.savefig(f"Figures/Haldane-SGBZ-spectrum-{which}.pdf")
+
+    fd.save_csv(
+        f"Figures/Haldane-SGBZ-spectrum-{which}",
+        ("Fig. S12(b) | SGBZ along the a1, a2 or x axis, " if which != "y" else
+         "Fig. S12(c) | SGBZ along the y axis, ") +
+        f"data set {which}: the scanned real energies whose SGBZ condition holds, "
+        "with their imaginary part; Re(E), Im(E)",
+        Re_E=E_real_mesh[success_mesh], Im_E=E_imag_mesh[success_mesh],
+    )
 
 
 if __name__ == "__main__":

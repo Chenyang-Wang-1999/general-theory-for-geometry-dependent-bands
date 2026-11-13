@@ -167,6 +167,134 @@ resulting `_poly_tools_cc*.so` / `lib_GBZ_manifold*.so` next to the vendored
 `poly_tools` / `GBZ_manifold` packages under `puncture-calculation/`, which is
 where those scripts import them from.
 
+### Text-format data of the figures (CSV)
+
+The panels whose data are loaded from the published pickles can also be written
+as plain CSV, one file per panel, next to the figure: this lets a reader look up
+the numbers behind a panel without unpickling the far larger binary files. The
+writer is `paper/figure_data.py`, and every plotting script calls it where the
+panel is saved, so the figure and its text data always come from the same run:
+
+```bash
+cd paper/HN-model
+MPLBACKEND=Agg python quasi-1D-spectrum.py
+# -> Figures/quasi-1D-x-N_15-E.pdf / .png  and  Figures/quasi-1D-x-N_15-E.csv
+```
+
+Only the panels that are drawn *from a data file* (a "data -> script" arrow in
+the flow charts below) get a CSV; panels that the plotting script computes itself
+- the analytic SGBZ/BZ spectra and the schematic figures - do not, because they
+follow from the formulas in those scripts. The files are regenerated on every
+run and are **not tracked by git** (`paper/*/Figures/*.csv` is ignored).
+
+Format: ASCII, comma separated, LF line endings, `%.17g` for every number (a
+float64 round trips exactly), no timestamps, so re-running a script reproduces
+the files byte for byte. Line 1 is a `#` comment naming the figure and the
+panel, line 2 is the header row with the column names, and every later line is
+one data point. Complex quantities are split into a `_re`/`_im` pair
+(`Re_E,Im_E`); a `series`, `entry` or `branch` column groups several polylines of
+different length in one file. The density-of-states sweeps of Fig. S10 are
+written as a matrix instead, because their grid is regular: line 1 is the same
+comment, lines 2 and 3 hold the Re(E) and the Im(E) cell edges (the arrays that
+`pcolormesh` takes, each after the name of its axis), and every later line holds
+the cells of one row.
+
+```python
+import numpy as np
+import pandas as pd
+
+# a table: one row per data point
+table = np.loadtxt("Figures/quasi-1D-x-N_15-E.csv", delimiter=",", skiprows=2)
+frame = pd.read_csv("Figures/quasi-1D-x-N_15-E.csv", comment="#")
+
+# a matrix: the cells, plus the two lines of cell edges
+grid = np.loadtxt("Figures/paper-HN-OBC-2-DOS-n1-320-n2-40.csv", delimiter=",",
+                  skiprows=3)
+lines = open("Figures/paper-HN-OBC-2-DOS-n1-320-n2-40.csv").readlines()
+re_edges = np.array([float(v) for v in lines[1].split(",")[1:]])
+im_edges = np.array([float(v) for v in lines[2].split(",")[1:]])
+```
+
+| figure | CSV files (in the `Figures` folder of the script) | columns |
+|---|---|---|
+| Fig. 3(e,f) | `paper/HN-model/Figures/{xy,11}-<aspect>-<L1>-<L2>-<total>.csv` | `Re_E,Im_E` |
+| Fig. S3(b) | `paper/winding-number/Figures/2D-HN-test-<n>.csv` | `mu_1,w_q1d_over_L2,w` |
+| Fig. S3(d) | `paper/winding-number/Figures/nH-Haldane-test-<n>.csv` | `mu_1,w_q1d_over_L2,w` |
+| Fig. S8(a,b,c) | `paper/HN-model/Figures/quasi-1D-{x,y,11}-N_15-E.csv` | `Re_E,Im_E` |
+| Fig. S8(d,i / e,i / f,i) | `quasi-1D-{x,y,11}-N_15-beta.csv` | `theta_pi,mu_x` / `mu_y` / `mu_11` |
+| Fig. S8(d,ii / e,ii / f,ii) | `quasi-1D-{x,y,11}-N_15-minor.csv` | `theta_pi,mu_y` (x, [11]) / `mu_x` (y) |
+| Fig. S10 | `paper/HN-model/Figures/paper-HN-OBC-2-DOS-n1-<L1>-n2-<L2>.csv` (60 files, 56 of them panels of Fig. S10) | matrix, cells = `dos` |
+| Fig. S11(a-c) | `paper/HN-model/Figures/eigenstate-distribution-320-40.csv` | `n1,n2,x,y,Re_psi,Re_psi_approx,abs_diff` |
+| Fig. S11(a-c), sliced views | `eigenstate-distribution-sliced-320-40.csv` | `n1,n2,x,y,Re_psi,Re_psi_approx` |
+| Fig. S11(d,e) | `eigenstate-difference-{lower,upper}.csv` | `n1,L2_30,L2_40,L2_50` |
+| Fig. S12(b,c) | `paper/Haldane-gainloss/Figures/Haldane-SGBZ-spectrum-{a1,a2,x,y}.csv` | `Re_E,Im_E` |
+| Fig. S12(e,f) | `paper/Haldane-gainloss/Figures/Haldane-OBC-spectrum-<L1>-<L2>[-square].csv` | `Re_E,Im_E` |
+| Fig. S13(a,b,c) | `paper/long-range-coupling/Figures/OBC-spectrum-nx<L1>-ny<L2>.csv` | `Re_E,Im_E` |
+| Fig. S13(d) | `paper/long-range-coupling/Figures/{x,y}-SGBZ-mux.csv` | `Re_E,mu` |
+| Fig. S13(e,f) | `paper/long-range-coupling/Figures/{x,y}-SGBZ-spectrum.csv` | `Re_E,Im_E` |
+| Fig. S18(c,d) | `paper/example-for-geom-dep-band/Figures/{square-region,diamond-region,square-region-zoomed-in}.csv` | `series,Re_E,Im_E` |
+| Fig. S19 | `paper/HN-model/Figures/paper-Amoeba-E_<Re>_<Im>.csv` | `entry,branch,mu_x,mu_y_min,mu_y_max` |
+| Fig. S23(c) | `paper/HN-model/Figures/OBC_eigenenergy_no_phase.csv` | `Re_E,Im_E` |
+
+Notes on the individual files:
+
+* One file can back several panels when they are drawn from the same data set:
+  `eigenstate-distribution-320-40.csv` also backs the `-colorbar`, `approx-`,
+  `diff-` and `zoomed-in` variants, `eigenstate-distribution-sliced-320-40.csv`
+  backs the four sliced panels (eigenstate and approximation, lower and upper),
+  and the `paper-HN-OBC-2-DOS-n1-*` CSV also backs the
+  `-axes` variant of its panel.
+* The Amoeba files store the shaded band of Fig. S19 as an envelope: for every
+  entry/branch the band covers the interval `[mu_y_min, mu_y_max]` at a fixed
+  `mu_x`, which reproduces the drawn region exactly and keeps the file at about
+  0.1 MB instead of the ~45 MB that the full mesh would need.
+* Fig. 3(c,d), S7(d,f), S17, S20 and the BZ region of S23(c) are computed
+  analytically inside their plotting scripts and have no CSV, as do the
+  schematic panels, `paper/HN-model/Figures/{GBZ-candidates-*,total-winding-*}`
+  (they need the punctured-GBZ solver and data that the dataset does not ship)
+  and the leftover panels in `Figures/` that no current script produces.
+
+The text data of all the panels are produced by the `__main__` blocks of ten
+plotting scripts. `export-figure-csv.py` runs them and collects the result in
+`data-export/`, one folder per caption panel (`Fig.3e`, `Fig.S10`, …), so that
+the data of the paper can be handed out without the pickles:
+
+```bash
+python export-figure-csv.py                  # fill data-export/
+python export-figure-csv.py Fig.3e Fig.S8d   # only these panels
+python export-figure-csv.py --check          # report only, write nothing
+python export-figure-csv.py --list           # the panels and their files
+```
+
+A script runs only when one of the CSV files it writes is missing (a clone
+without them is filled by a single call); `--force` re-runs every one of them.
+Such a run rewrites the figures in `paper/<area>/Figures` as well. The ten
+scripts are (the ones for `OBC-spectrum.py` and `eigenstate-comparison.py` need
+several GB of RAM and a few minutes, because they load the largest pickles):
+
+```bash
+cd paper/HN-model              && MPLBACKEND=Agg python OBC-spectrum.py
+cd paper/HN-model              && MPLBACKEND=Agg python quasi-1D-spectrum.py
+cd paper/HN-model              && MPLBACKEND=Agg python eigenstate-comparison.py
+cd paper/HN-model              && MPLBACKEND=Agg python Amoeba-related-plot.py
+cd paper/HN-model              && MPLBACKEND=Agg python BZ_spectrum.py
+cd paper/HN-model              && MPLBACKEND=Agg python plot-OBC-dos.py
+cd paper/Haldane-gainloss      && MPLBACKEND=Agg python plot-spectrum.py
+cd paper/long-range-coupling   && MPLBACKEND=Agg python spectrum.py
+cd paper/winding-number        && MPLBACKEND=Agg python W-and-W-strip.py
+cd paper/example-for-geom-dep-band && MPLBACKEND=Agg python plot-spectrum.py
+```
+
+Adding the same output to a new panel is one call, mirroring the `savefig`:
+
+```python
+import figure_data as fd
+fd.save_csv("Figures/<stem>", "<Fig. X(y) | what the columns are>",
+            Re_E=eigv.real, Im_E=eigv.imag)
+fd.save_grid("Figures/<stem>", x_edges, y_edges, grid, "<comment>",
+             x_name="Re_E", y_name="Im_E", value_name="dos")
+```
+
 Following sections describe the figures in the main text and the supplementary information, respectively.
 
 ## Main text

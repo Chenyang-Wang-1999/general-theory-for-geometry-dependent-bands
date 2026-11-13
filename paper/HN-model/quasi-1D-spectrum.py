@@ -15,6 +15,7 @@ from scipy.sparse import linalg as spla
 import sys
 sys.path.append("..")
 import figure_settings_common as fs
+import figure_data as fd
 import HN_model_common as HN
 
 # The color palette is shared by all the plotting scripts of this repository,
@@ -116,6 +117,12 @@ def plot_quasi_1D_x():
     plt_E[0].remove()
     fig.savefig("Figures/quasi-1D-x-N_15-E.pdf")
 
+    fd.save_csv(
+        "Figures/quasi-1D-x-N_15-E",
+        "Fig. S8(a) | QMGBZ spectrum of the [10] strip, N = %d; Re(E), Im(E)" % N,
+        Re_E=E.real, Im_E=E.imag,
+    )
+
     fig = plt.figure(figsize=(4*fs.cm, 2 * fs.cm))
     ax = fig.gca()
     ax.set_position([0.2, 0.2, 0.8, 0.8])
@@ -153,6 +160,13 @@ def plot_quasi_1D_x():
     ax.legend()
     plt_beta[0].remove()
     fig.savefig("Figures/quasi-1D-x-N_15-beta.pdf")
+
+    fd.save_csv(
+        "Figures/quasi-1D-x-N_15-beta",
+        "Fig. S8(d,i) | QMGBZ of the [10] strip, N = %d; theta_pi = arg(beta)/pi, "
+        "mu_x = ln|beta|" % N,
+        theta_pi=np.log(beta).imag / np.pi, mu_x=np.log(beta).real,
+    )
 
 def plot_quasi_1D_y():
     with open("../../puncture-calculation/data/paper-quasi-1D-y-N_15.pkl", "rb") as fp:
@@ -197,6 +211,12 @@ def plot_quasi_1D_y():
     plt_E[0].remove()
     fig.savefig("Figures/quasi-1D-y-N_15-E.pdf")
 
+    fd.save_csv(
+        "Figures/quasi-1D-y-N_15-E",
+        "Fig. S8(b) | QMGBZ spectrum of the [01] strip, N = %d; Re(E), Im(E)" % N,
+        Re_E=E.real, Im_E=E.imag,
+    )
+
     fig = plt.figure(figsize=(4*fs.cm, 2 * fs.cm))
     ax = fig.gca()
     ax.set_position([0.2, 0.2, 0.8, 0.8])
@@ -233,6 +253,13 @@ def plot_quasi_1D_y():
     ax.legend()
     plt_beta[0].remove()
     fig.savefig("Figures/quasi-1D-y-N_15-beta.pdf")
+
+    fd.save_csv(
+        "Figures/quasi-1D-y-N_15-beta",
+        "Fig. S8(e,i) | QMGBZ of the [01] strip, N = %d; theta_pi = arg(beta)/pi, "
+        "mu_y = ln|beta|" % N,
+        theta_pi=np.log(beta).imag / np.pi, mu_y=np.log(beta).real,
+    )
 
 def plot_quasi_1D_11():
     with open("../../puncture-calculation/data/paper-quasi-1D-11-N_15.pkl", "rb") as fp:
@@ -276,6 +303,12 @@ def plot_quasi_1D_11():
 
     fig.savefig("Figures/quasi-1D-11-N_15-E.pdf")
 
+    fd.save_csv(
+        "Figures/quasi-1D-11-N_15-E",
+        "Fig. S8(c) | QMGBZ spectrum of the [11] strip, N = %d; Re(E), Im(E)" % N,
+        Re_E=E.real, Im_E=E.imag,
+    )
+
     fig = plt.figure(figsize=(4*fs.cm, 2 * fs.cm))
     ax = fig.gca()
     ax.set_position([0.2, 0.2, 0.8, 0.8])
@@ -311,6 +344,13 @@ def plot_quasi_1D_11():
     plt.legend()
     plt_beta[0].remove()
     plt.savefig("Figures/quasi-1D-11-N_15-beta.pdf")
+
+    fd.save_csv(
+        "Figures/quasi-1D-11-N_15-beta",
+        "Fig. S8(f,i) | QMGBZ of the [11] strip, N = %d; theta_pi = arg(beta)/pi, "
+        "mu_11 = ln|beta|" % N,
+        theta_pi=np.log(beta).imag / np.pi, mu_11=np.log(beta).real,
+    )
 
 def plot_minor_beta_11():
     # 11 direction
@@ -348,6 +388,13 @@ def plot_minor_beta_11():
     beta_plt[0].remove()
     fig.savefig("Figures/quasi-1D-11-N_15-minor.pdf")
 
+    fd.save_csv(
+        "Figures/quasi-1D-11-N_15-minor",
+        "Fig. S8(f,ii) | minor momentum of the [11] strip, N = %d; "
+        "theta_pi = arg(beta)/pi, mu_y = ln|beta_y| of the QMGBZ" % N,
+        theta_pi=np.log(beta).imag / np.pi, mu_y=np.log(r_fit_list),
+    )
+
 def plot_minor_beta_x():
     # 11 direction
     with open("../../puncture-calculation/data/paper-quasi-1D-x-N_15.pkl", "rb") as fp:
@@ -383,6 +430,13 @@ def plot_minor_beta_x():
     beta_plt[0].remove()
     fig.savefig("Figures/quasi-1D-x-N_15-minor.pdf")
 
+    fd.save_csv(
+        "Figures/quasi-1D-x-N_15-minor",
+        "Fig. S8(d,ii) | minor momentum of the [10] strip, N = %d; "
+        "theta_pi = arg(beta)/pi, mu_y = ln|beta_y| of the QMGBZ" % N,
+        theta_pi=np.log(beta).imag / np.pi, mu_y=np.log(r_fit_list),
+    )
+
 def plot_minor_beta_y():
     # 11 direction
     with open("../../puncture-calculation/data/paper-quasi-1D-y-N_15.pkl", "rb") as fp:
@@ -417,6 +471,13 @@ def plot_minor_beta_y():
     ax.legend()
     beta_plt[0].remove()
     fig.savefig("Figures/quasi-1D-y-N_15-minor.pdf")
+
+    fd.save_csv(
+        "Figures/quasi-1D-y-N_15-minor",
+        "Fig. S8(e,ii) | minor momentum of the [01] strip, N = %d; "
+        "theta_pi = arg(beta)/pi, mu_x = ln|beta_x| of the QMGBZ" % N,
+        theta_pi=np.log(beta).imag / np.pi, mu_x=np.log(r_fit_list),
+    )
 
 def plot_eigenstates_beta_11():
     ''' Plot distributions for eigenstates '''

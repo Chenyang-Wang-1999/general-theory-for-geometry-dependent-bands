@@ -3,7 +3,7 @@ author:        wangchenyang <cy-wang21@mails.tsinghua.edu.cn>
 date:          2024-09-04
 Copyright © Department of Physics, Tsinghua University. All rights reserved
 
-Plot OBC spectrum and compare with stripe GBZ
+Plot OBC spectrum and compare with strip GBZ
 '''
 
 import pickle
@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import sys
 sys.path.append('..')
 import figure_settings_common as fs
+import figure_data as fd
 import numpy as np
 
 plt.style.use('../settings-and-materials/paper_plot.mplstyle')
@@ -78,20 +79,27 @@ def plot_OBC_with_given_aspect(
     ax.xaxis.set_visible(True)
     ax.yaxis.set_visible(True)
 
-    ### plot stripe GBZ ###
+    ### plot strip GBZ ###
     bound, loop = HN.get_x_DGBZ_spectrum(J_X1, J_X2, J_Y1, J_Y2)
-    stripe_GBZ = ax.plot(loop.real, loop.imag, 'r--')
-    ax.legend(dots + stripe_GBZ, ["OBC", "Stripe GBZ"])
+    strip_GBZ = ax.plot(loop.real, loop.imag, 'r--')
+    ax.legend(dots + strip_GBZ, ["OBC", "strip GBZ"])
     dots[0].remove()
     fig.savefig(
         "Figures/xy-%.6f-%d-%d-%d.pdf" % (aspect, shape[0], shape[1], shape[0] * shape[1]),
+    )
+
+    fd.save_csv(
+        "Figures/xy-%.6f-%d-%d-%d" % (aspect, shape[0], shape[1], shape[0] * shape[1]),
+        "Fig. 3(e) | OBC spectrum of the 2D HN model in the xy-parallelogram with "
+        "(L1, L2) = (%d, %d); Re(E), Im(E)" % (shape[0], shape[1]),
+        Re_E=eigv.real, Im_E=eigv.imag,
     )
 
 
 def plot_11_OBC_spectrum(
         aspect: float,
         N: int,
-        which_stripe_GBZ=0    # 0: None, 1: (1,1), 2: xy
+        which_strip_GBZ=0    # 0: None, 1: (1,1), 2: xy
 ):
     ''' Given the aspect and site number, plot the spectrum and save '''
     ### load data ###
@@ -128,25 +136,33 @@ def plot_11_OBC_spectrum(
     ax.xaxis.set_visible(True)
     ax.yaxis.set_visible(True)
 
-    ### plot stripe GBZ ###
-    if which_stripe_GBZ == 1:
+    ### plot strip GBZ ###
+    if which_strip_GBZ == 1:
         bound, loop = HN.get_11_DGBZ_spectrum(J_X1, J_X2, J_Y1, J_Y2)
-        stripe_GBZ = ax.plot(loop.real, loop.imag, 'r--')
-        # ax.legend(dots + stripe_GBZ, ["OBC", "(1,1) Direction"])
-    elif which_stripe_GBZ == 2:
+        strip_GBZ = ax.plot(loop.real, loop.imag, 'r--')
+        # ax.legend(dots + strip_GBZ, ["OBC", "(1,1) Direction"])
+    elif which_strip_GBZ == 2:
         bound, loop = HN.get_x_DGBZ_spectrum(J_X1, J_X2, J_Y1, J_Y2)
-        stripe_GBZ = ax.plot(loop.real, loop.imag, 'r--')
-        # ax.legend(dots + stripe_GBZ, ["OBC", "y "])
+        strip_GBZ = ax.plot(loop.real, loop.imag, 'r--')
+        # ax.legend(dots + strip_GBZ, ["OBC", "y "])
     dots[0].remove()
     fig.savefig(
         "Figures/11-%.6f-%d-%d-%d.pdf" % (aspect, shape[0], shape[1], shape[0] * shape[1]),
+    )
+
+    fd.save_csv(
+        "Figures/11-%.6f-%d-%d-%d" % (aspect, shape[0], shape[1], shape[0] * shape[1]),
+        "Fig. 3(f) | OBC spectrum of the 2D HN model in the [11]-parallelogram with "
+        "(L1, L2) = (%d, %d) in the cell basis of the [11] direction; Re(E), Im(E)"
+        % (shape[0], shape[1]),
+        Re_E=eigv.real, Im_E=eigv.imag,
     )
 
 
 def plot_11_OBC_spectrum_marked_SGBZ(
         aspect: float,
         N: int,
-        which_stripe_GBZ=0    # 0: None, 1: (1,1), 2: xy
+        which_strip_GBZ=0    # 0: None, 1: (1,1), 2: xy
 ):
     ''' Given the aspect and site number, plot the spectrum and save '''
     # Only this routine needs shapely; importing it lazily keeps the figure
@@ -188,9 +204,11 @@ def plot_11_OBC_spectrum_marked_SGBZ(
     )
 
     SGBZ_eigv = []
+    in_sgbz = np.zeros(len(eigv), dtype=int)
     for j in range(len(eigv)):
         if(polygon_obj.contains(shapely.Point([(eigv[j]**2).real, (eigv[j]**2).imag]))):
             SGBZ_eigv.append(eigv[j])
+            in_sgbz[j] = 1
     SGBZ_eigv = np.asarray(SGBZ_eigv)
     ax.plot(
         SGBZ_eigv.real, SGBZ_eigv.imag, '.',
@@ -203,6 +221,14 @@ def plot_11_OBC_spectrum_marked_SGBZ(
     fig.savefig(
         "Figures/11-SGBZ-marked-%.6f-%d-%d-%d.png" % (aspect, shape[0], shape[1], shape[0] * shape[1]),
         dpi=600
+    )
+
+    fd.save_csv(
+        "Figures/11-SGBZ-marked-%.6f-%d-%d-%d" % (aspect, shape[0], shape[1], shape[0] * shape[1]),
+        "Fig. 3 | OBC spectrum of the [11]-parallelogram with (L1, L2) = (%d, %d); "
+        "in_sgbz flags the eigenvalues whose E^2 falls inside the [11]-SGBZ region"
+        % (shape[0], shape[1]),
+        Re_E=eigv.real, Im_E=eigv.imag, in_sgbz=in_sgbz,
     )
 
 

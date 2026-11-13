@@ -20,3 +20,11 @@ diff.tex
 diffNotes.bib
 diff.pdf
 *.eps
+data-export/*
+!data-export/code
+!data-export/plot-figures.py
+!data-export/README.md
+
+# Text data written next to the figures by paper/figure_data.py (see README).
+# They are regenerated whenever a plotting script is run, so they are not tracked.
+paper/*/Figures/*.csv

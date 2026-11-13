@@ -16,7 +16,9 @@ import pickle
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from colors import COLORS
+import figure_data as fd
 
 CM_IN_INCH = 0.393701
 
@@ -118,6 +120,15 @@ def plot_OBC_spectrum():
     plt.plot(loop.real, loop.imag, label="SGBZ")
     plt.legend()
     plt.savefig("Figures/OBC_eigenenergy_no_phase.png")
+
+    fd.save_csv(
+        "Figures/OBC_eigenenergy_no_phase",
+        "Fig. S23(c) | numerical OBC eigenenergies of the 2D HN model with "
+        "(Jx1, Jx2, Jy1, Jy2) = (%g, %g, %g, %g), used to check the equivalence "
+        "between the OBC and the SGBZ spectrum; Re(E), Im(E)"
+        % (Jx1, Jx2, Jy1, Jy2),
+        Re_E=eigv.real, Im_E=eigv.imag,
+    )
 
 
 if __name__ == "__main__":

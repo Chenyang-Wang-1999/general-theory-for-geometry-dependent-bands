@@ -16,6 +16,7 @@ from matplotlib import use as mpl_use
 import sys
 sys.path.append("..")
 import figure_settings_common as fs
+import figure_data as fd
 plt.style.use("../settings-and-materials/paper_plot.mplstyle")
 
 
@@ -63,6 +64,43 @@ def plot_Amoeba(E_ref):
     # load data
     with open(AMOEBA_DATA + name_str + ".pkl", "rb") as fp:
         all_amoeba = pickle.load(fp)
+
+    # Text data behind the panel.  Each entry of ``all_amoeba`` is a degenerate
+    # mesh: the rows of ``x_norm`` are all equal and ``y_norm[:, :, k]`` spans a
+    # band for every column, so the shaded region is the band [min, max] of
+    # ``ln|y|`` at a fixed ``ln|x|``.  The pcolor call decides which of the two
+    # is drawn horizontally: ``x_major_flag`` puts ``ln|x|`` on the x axis (the
+    # band runs along y) and the other orientation puts ``ln|y|`` on the x axis
+    # (the band runs along x), so the flag is written as the ``axis`` column.
+    # Storing the two envelopes reproduces the drawn region exactly and keeps
+    # the file at about 0.1 MB instead of the 45 MB of the full mesh.
+    envelopes = []
+    for entry_ind, (curr_x_norm, curr_y_norm, x_major_flag) in enumerate(all_amoeba):
+        for branch_ind in range(curr_y_norm.shape[2]):
+            envelopes.append((
+                entry_ind, branch_ind,
+                "x" if x_major_flag else "y",
+                np.log(curr_x_norm[0, :]),
+                np.log(curr_y_norm[:, :, branch_ind]),
+            ))
+    fd.save_csv(
+        "Figures/%s" % name_str,
+        "Fig. S19 | amoeba of the characteristic polynomial at E = (%.2f%+.2fj); every "
+        "entry/branch of the shaded region is the band [mu_min, mu_max] at a fixed "
+        "mu; axis = x means that the band runs along mu_y at a fixed mu_x, axis = y "
+        "the other way round" % (E_ref.real, E_ref.imag),
+        entry=np.concatenate([np.full(band.size, entry)
+                              for entry, _, _, band, _ in envelopes]),
+        branch=np.concatenate([np.full(band.size, branch)
+                               for _, branch, _, band, _ in envelopes]),
+        axis=np.concatenate([np.full(band.size, axis)
+                             for _, _, axis, band, _ in envelopes]),
+        mu=np.concatenate([band for _, _, _, band, _ in envelopes]),
+        mu_min=np.concatenate([mesh.min(axis=0)
+                               for _, _, _, _, mesh in envelopes]),
+        mu_max=np.concatenate([mesh.max(axis=0)
+                               for _, _, _, _, mesh in envelopes]),
+    )
 
     # plot
     fig = plt.figure(figsize=(
@@ -184,8 +222,8 @@ def plot_Amoeba_and_GBZ_spectra():
 
 
 if __name__ == '__main__':
-    # for E_ref in [1 + 1j, 2 + 2j, 3 + 3j]:
+    for E_ref in [1 + 1j, 2 + 2j, 3 + 3j]:
         # plot_non_Bloch_sols(E_ref)
-        # plot_Amoeba(E_ref)
+        plot_Amoeba(E_ref)
         # plot_minor_beta_abs(E_ref)
     plot_Amoeba_and_GBZ_spectra()

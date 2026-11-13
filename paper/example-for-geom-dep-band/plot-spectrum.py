@@ -13,7 +13,9 @@ import pickle
 import os
 import sys
 sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".."))
+sys.path.append(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 from colors import COLORS
+import figure_data as fd
 
 DEFAULT_PARAMETERS = {
     "a0": 0.8,
@@ -36,6 +38,19 @@ def get_theoretical_spectrum(Lx: int, Ly: int):
         E_mesh[:, n_ind] = 2 * sqrt_AB * np.cos((n_ind + 1) * np.pi / (Ly + 1))
     E_list = E_mesh.flatten()
     return E_list
+
+
+def save_spectrum_data(stem, panel, E_num, amoeba_boundary_pts):
+    '''Write the numerical spectrum and the amoebic boundary of one panel.'''
+    fd.save_csv(
+        "Figures/%s" % stem,
+        panel + " | numerical OBC spectrum and the amoebic region boundary of the "
+        "characteristic polynomial; Re(E), Im(E)",
+        series=np.concatenate([np.full(E_num.size, "numerical"),
+                               np.full(amoeba_boundary_pts.size, "amoebic")]),
+        Re_E=np.concatenate([E_num.real, amoeba_boundary_pts.real]),
+        Im_E=np.concatenate([E_num.imag, amoeba_boundary_pts.imag]),
+    )
 
 def plot_square_region():
 
@@ -88,6 +103,9 @@ def plot_square_region():
     fig.savefig("Figures/square-region.pdf")
     plt.close(fig)
 
+    save_spectrum_data("square-region", "Fig. S18(c) | square geometry, 57 x 57",
+                       E_num, amoeba_boundary_pts)
+
 def plot_diamond_region():
     #### load data ####
     with open("%s/special-test-amoeba-boundary-rearranged.pkl" % DATA_FOLDER, "rb") as fp:
@@ -125,6 +143,9 @@ def plot_diamond_region():
 
     fig.savefig("Figures/diamond-region.pdf")
     plt.close(fig)
+
+    save_spectrum_data("diamond-region", "Fig. S18(d) | diamond geometry, 40 x 40",
+                       E_num, amoeba_boundary_pts)
 
 def plot_square_region_zoomed_in():
     #### load data ####
@@ -172,6 +193,10 @@ def plot_square_region_zoomed_in():
 
     fig.savefig("Figures/square-region-zoomed-in.pdf")
     plt.close(fig)
+
+    save_spectrum_data("square-region-zoomed-in",
+                       "Fig. S18(c) zoom | square geometry, 57 x 57",
+                       E_num, amoeba_boundary_pts)
 
 if __name__ == "__main__":
     plot_square_region()

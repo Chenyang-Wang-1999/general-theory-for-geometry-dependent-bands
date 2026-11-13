@@ -8,10 +8,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 
+import sys
+sys.path.append("..")
+import figure_data as fd
+
 DATA_DIR = "../../long-range-coupling/data"
 CM_IN_INCH = 1 / 2.54
 
-def plot_spectrum(eigv, fname):
+def plot_spectrum(eigv, fname, panel):
     plt.style.use("../settings-and-materials/paper_plot.mplstyle")
     fig = plt.figure(figsize=(
         4 / 0.8 * CM_IN_INCH, 4 / 0.8 * CM_IN_INCH
@@ -37,11 +41,22 @@ def plot_spectrum(eigv, fname):
 
     fig.savefig(f"Figures/{fname}.pdf")
 
+    fd.save_csv(
+        f"Figures/{fname}",
+        "%s | numerically calculated spectrum; Re(E), Im(E)" % panel,
+        Re_E=eigv.real, Im_E=eigv.imag,
+    )
+
+
+#: panel letters of the three OBC spectra of Fig. S13
+OBC_PANELS = {(77, 77): "Fig. S13(a)", (300, 20): "Fig. S13(b)",
+              (20, 300): "Fig. S13(c)"}
+
 
 def plot_OBC_spectrum(nx, ny):
     with open(f"{DATA_DIR}/OBC-default-nx{nx}-ny{ny}.pkl", "rb") as f:
         params, coord_list, eigv, eigvec = pickle.load(f)
-    plot_spectrum(eigv, f"OBC-spectrum-nx{nx}-ny{ny}")
+    plot_spectrum(eigv, f"OBC-spectrum-nx{nx}-ny{ny}", OBC_PANELS[(nx, ny)])
 
 
 def plot_x_SGBZ():
@@ -61,7 +76,7 @@ def plot_x_SGBZ():
             err_list.append(r["mux"])
 
     E_list = np.array(E_list)
-    plot_spectrum(E_list, "x-SGBZ-spectrum")
+    plot_spectrum(E_list, "x-SGBZ-spectrum", "Fig. S13(e)")
 
 
 def plot_y_SGBZ():
@@ -78,10 +93,10 @@ def plot_y_SGBZ():
             for E_val, mu, theta1, theta2 in r["GBZ_points"]:
                 E_list.append(E_val)
     E_list = np.array(E_list)
-    plot_spectrum(E_list, "y-SGBZ-spectrum")
+    plot_spectrum(E_list, "y-SGBZ-spectrum", "Fig. S13(f)")
 
 
-def plot_mux(E_real, mux, fname):
+def plot_mux(E_real, mux, fname, panel):
     plt.style.use("../settings-and-materials/paper_plot.mplstyle")
     fig = plt.figure(figsize=(
         4 / 0.8 * CM_IN_INCH, 2 / 0.8 * CM_IN_INCH
@@ -110,6 +125,13 @@ def plot_mux(E_real, mux, fname):
 
     fig.savefig(f"Figures/{fname}.pdf")
 
+    fd.save_csv(
+        f"Figures/{fname}",
+        "%s | mu_x evaluated on the %s-SGBZ as a function of Re(E)"
+        % (panel, "x" if fname.startswith("x-SGBZ") else "y"),
+        Re_E=E_real, mu=mux,
+    )
+
 
 def plot_x_SGBZ_mux():
     results = []
@@ -131,7 +153,7 @@ def plot_x_SGBZ_mux():
 
     E_list = np.array(E_list)
     mux_list = np.array(mux_list)
-    plot_mux(E_list.real, mux_list, "x-SGBZ-mux")
+    plot_mux(E_list.real, mux_list, "x-SGBZ-mux", "Fig. S13(d,i)")
 
 
 def plot_y_SGBZ_mux():
@@ -155,14 +177,14 @@ def plot_y_SGBZ_mux():
 
     E_list = np.array(E_list)
     mux_list = np.array(mux_list)
-    plot_mux(E_list.real, mux_list, "y-SGBZ-mux")
+    plot_mux(E_list.real, mux_list, "y-SGBZ-mux", "Fig. S13(d,ii)")
 
 
 if __name__ == "__main__":
-    # plot_OBC_spectrum(20, 300)
-    # plot_OBC_spectrum(300, 20)
-    # plot_OBC_spectrum(77, 77)
-    # plot_x_SGBZ()
-    # plot_y_SGBZ()
+    plot_OBC_spectrum(20, 300)
+    plot_OBC_spectrum(300, 20)
+    plot_OBC_spectrum(77, 77)
+    plot_x_SGBZ()
+    plot_y_SGBZ()
     plot_x_SGBZ_mux()
     plot_y_SGBZ_mux()

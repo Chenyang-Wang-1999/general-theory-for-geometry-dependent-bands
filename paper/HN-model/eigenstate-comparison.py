@@ -15,6 +15,7 @@ DATA_DIR = "../../puncture-calculation"
 import sys
 sys.path.append('..')
 import figure_settings_common as fs
+import figure_data as fd
 
 
 # cmap = cm.get_cmap('seismic')
@@ -209,6 +210,23 @@ def plot_eigenstate_distribution():
     )
     fig.savefig("Figures/approx-eigenstate-distribution-zoomed-in-%d-%d.pdf"%(shape[0], shape[1]))
 
+    # The same (L1, L2) row backs the eigenstate-distribution, approx-, diff- and
+    # zoomed-in panels, so a single CSV serves all of them.
+    n1_index, n2_index = np.meshgrid(
+        np.arange(shape[0]), np.arange(shape[1]), indexing="ij"
+    )
+    fd.save_csv(
+        "Figures/eigenstate-distribution-%d-%d" % (shape[0], shape[1]),
+        "Fig. S11(a) | eigenstate at E = (%.6g%+.6gj) and its non-Bloch "
+        "decomposition, (L1, L2) = (%d, %d); n1, n2 are site indices, x, y the "
+        "plotted site coordinates, the psi columns are the real parts"
+        % (eigv[eigv_ind].real, eigv[eigv_ind].imag, shape[0], shape[1]),
+        n1=n1_index.ravel(order="F"), n2=n2_index.ravel(order="F"),
+        x=x_mesh.ravel(order="F"), y=y_mesh.ravel(order="F"),
+        Re_psi=curr_eigvec.real, Re_psi_approx=approx_eigvec.real,
+        abs_diff=np.abs(diff_vector),
+    )
+
 
     # plt.figure()
     # plt.plot(curr_eigvec.reshape(shape, order='F')[:,0].real)
@@ -359,6 +377,21 @@ def plot_eigenstate_zoomed_in():
     )
     fig.savefig("Figures/approx-eigenstate-distribution-sliced-upper-%d-%d.pdf"%(shape[0], shape[1]))
 
+    n1_index, n2_index = np.meshgrid(
+        np.arange(shape[0]), np.arange(shape[1]), indexing="ij"
+    )
+    fd.save_csv(
+        "Figures/eigenstate-distribution-sliced-%d-%d" % (shape[0], shape[1]),
+        "Fig. S11(b,c) | eigenstate at E = (%.6g%+.6gj) and its non-Bloch "
+        "decomposition, sliced upper and lower view, (L1, L2) = (%d, %d); "
+        "n1, n2 are site indices, x, y the plotted site coordinates, the psi "
+        "columns are the real parts"
+        % (eigv[eigv_ind].real, eigv[eigv_ind].imag, shape[0], shape[1]),
+        n1=n1_index.ravel(order="F"), n2=n2_index.ravel(order="F"),
+        x=x_mesh.ravel(order="F"), y=y_mesh.ravel(order="F"),
+        Re_psi=curr_eigvec.real, Re_psi_approx=approx_eigvec.real,
+    )
+
 
 def get_eigenstate_difference(n1, n2):
     ''' Plot the average of the absolute value of the difference of eigenstates'''
@@ -417,6 +450,14 @@ def plot_eigenstate_difference():
     ax.legend()
     fig.savefig("Figures/eigenstate-difference-lower.pdf")
 
+    fd.save_csv(
+        "Figures/eigenstate-difference-lower",
+        "Fig. S11(e) | residual R_l, normalized difference between the eigenstate "
+        "and its non-Bloch decomposition in the lower half; n1 is the site index along the "
+        "[11] direction, the columns are L2 = 30, 40, 50",
+        n1=x_40, L2_30=diff_lower_30, L2_40=diff_lower_40, L2_50=diff_lower_50,
+    )
+
     fig = plt.figure(figsize=(4 * fs.cm, 4 * fs.cm))
     ax = fig.gca()
     ax.set_xlabel("n1")
@@ -428,6 +469,14 @@ def plot_eigenstate_difference():
     plt.plot(x_50, diff_upper_50, ':', label="$L_2 = 50$")
     ax.legend()
     fig.savefig("Figures/eigenstate-difference-upper.pdf")
+
+    fd.save_csv(
+        "Figures/eigenstate-difference-upper",
+        "Fig. S11(d) | residual R_u, normalized difference between the eigenstate "
+        "and its non-Bloch decomposition in the upper half; n1 is the site index along the "
+        "[11] direction, the columns are L2 = 30, 40, 50",
+        n1=x_40, L2_30=diff_upper_30, L2_40=diff_upper_40, L2_50=diff_upper_50,
+    )
 
 
 def plot_average_eigenstate_distribution():
@@ -462,9 +511,12 @@ def plot_average_eigenstate_distribution():
 
 
 if __name__ == '__main__':
-    # plot_eigenstate_distribution()
-    # plot_eigenstate_zoomed_in()
+    plot_eigenstate_distribution()
+    plot_eigenstate_zoomed_in()
     # get_eigenstate_difference(320, 30)
-    # plot_eigenstate_difference()
+    plot_eigenstate_difference()
     # print_eigenenergy()
-    plot_average_eigenstate_distribution()
+    # ``plot_average_eigenstate_distribution`` needs
+    # paper-HN-OBC-2-aspect_8.000000-N_20.pkl, which the published data set does
+    # not contain (it only ships the N = 40 rows), so it is not in the default run.
+    # plot_average_eigenstate_distribution()
